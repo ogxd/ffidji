@@ -1,7 +1,7 @@
 ﻿<Interface>
     <Method name="Add">
-        <Parameter name="A" type="Int"/>
-        <Parameter name="B" type="Int"/>
-        <Return name="C" type="Int"/>
+        <Parameter name="A" type="Int32"/>
+        <Parameter name="B" type="Int32"/>
+        <Return name="C" type="Int32"/>
     </Method>
 </Interface>

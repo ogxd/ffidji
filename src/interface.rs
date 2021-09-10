@@ -1,4 +1,5 @@
 #[derive(Debug, Deserialize)]
+
 pub struct Interface {
     #[serde(rename = "Method", default)]
     pub methods: Vec<Method>
