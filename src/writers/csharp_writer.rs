@@ -55,8 +55,9 @@ impl InterfaceWriter for CsharpWriter {
         write!("{");
 
         for method in &interface.methods {
-            write!("[DllImport({})]", "MyNativeLibrary.dll");
-            write!("public {} {}", method.name, "prout");
+
+            write!("[DllImport(\"{}\")]", "MyNativeLibrary.dll");
+            write!("public void {}()", method.name);
             write!("{");
             write!("}");
         }
