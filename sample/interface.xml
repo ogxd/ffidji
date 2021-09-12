@@ -1,4 +1,4 @@
-﻿<Interface>
+﻿<Interface name="SampleInterface">
     <Method name="Add">
         <Parameter name="A" type="Int32"/>
         <Parameter name="B" type="Int32"/>
