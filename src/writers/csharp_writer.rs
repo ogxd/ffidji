@@ -1,4 +1,4 @@
-use crate::interface::Interface as Interface;
+use crate::interface::{Interface as Interface, Parameter};
 
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -51,17 +51,26 @@ impl InterfaceWriter for CsharpWriter {
         write!("using System;");
         write!("using System.Runtime.InteropServices;");
         write!();
-        write!("namespace MyInterface");
+        write!("namespace MyNamespace");
+        write!("{");
+        write!("public static class MyInterface");
         write!("{");
 
         for method in &interface.methods {
-
+            let parameters = &method.parameters;
+            let parameters_str = parameters
+                .into_iter()
+                .map(|p| [p.r#type.clone(), p.name.clone()].join(" "))
+                .collect::<Vec<String>>()
+                .join(", ");
+                
             write!("[DllImport(\"{}\")]", "MyNativeLibrary.dll");
-            write!("public void {}()", method.name);
+            write!("public static void {}({})", method.name, parameters_str);
             write!("{");
             write!("}");
         }
 
+        write!("}");
         write!("}");
     }
 }
