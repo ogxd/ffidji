@@ -1,7 +1,29 @@
 ﻿<Interface name="SampleInterface">
+
+    <Type name="MyBlittableStruct">
+        <Field name="foo" type="int32"/>
+        <Field name="bar" type="int32"/>
+    </Type>
+
+    <Type name="MyNonBlittableStruct">
+        <Field name="fooArray" type="int32[]"/>
+        <Field name="barArray" type="int32[]"/>
+    </Type>
+
+    <Enum name="MyEnum">
+        <Field name="foo" type="int32"/>
+        <Field name="bar" type="int32"/>
+    </Enum>
+
     <Method name="Add">
-        <Parameter name="A" type="Int32"/>
-        <Parameter name="B" type="Int32"/>
-        <Return name="C" type="Int32"/>
+        <Parameter name="A" type="int32"/>
+        <Parameter name="B" type="int32"/>
+        <Return name="C" type="int32"/>
     </Method>
+
+    <Method name="MyMethod">
+        <Parameter name="blittableStruct" type="MyBlittableStruct"/>
+        <Return name="nonBlittableStruct" type="MyNonBlittableStruct"/>
+    </Method>
+
 </Interface>

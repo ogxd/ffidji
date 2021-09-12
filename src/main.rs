@@ -50,7 +50,8 @@ fn main() {
     println!("Interface file: {}", interface_path.display());
     let interface_str = fs::read_to_string(interface_path).unwrap();
     let interface_str_no_bom = interface_str.strip_bom().to_string();
-    let interface: interface::Interface = from_reader(interface_str_no_bom.as_bytes()).unwrap();
+    let mut interface: interface::Interface = from_reader(interface_str_no_bom.as_bytes()).unwrap();
+    interface::enrich(&mut interface);
 
 
     // FROM
