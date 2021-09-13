@@ -1,3 +1,4 @@
+use crate::interface::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
@@ -83,90 +84,30 @@ impl Interface {
             panic!("interface must be initialized!");
         }
 
-        let tt = &self.types_map;
-        let x = tt.as_ref().unwrap();
-        let ttt = x.get(type_name);
-        assert!(ttt.is_some(), "missing type: {}", type_name);
+        let r#type = &self.types_map.as_ref().unwrap().get(type_name);
+        assert!(r#type.is_some(), "missing type: {}", type_name);
 
-        return ttt.unwrap();
+        return r#type.unwrap();
     }
 
     pub fn is_type_blittable(&self, r#type: &Type) -> bool {
         if r#type.base_type {
-            true;
-        } 
-        else if r#type.base_type {
-
+            return true;
         }
         else {
             for field in &r#type.fields {
-                let x = self.get_type(&field.r#type);
-                if !self.is_type_blittable(x) {
+                if !self.is_param_blittable(field) {
                     return false;
                 }
             }
         }
         return true;
     }
-}
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct Type {
-
-    #[serde(rename = "name", default)]
-    pub name: String,
-    
-    #[serde(rename = "description", default)]
-    pub description: Option<String>,
-
-    #[serde(rename = "Field", default)]
-    pub fields: Vec<Field>,
-
-    #[serde(skip_deserializing)]
-    pub base_type: bool,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Field {
-
-    #[serde(rename = "name", default)]
-    pub name: String,
-
-    #[serde(rename = "description", default)]
-    pub description: Option<String>,
-
-    #[serde(rename = "type", default)]
-    pub r#type: String,
-
-    #[serde(rename = "array", default)]
-    array: Option<bool>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Method {
-
-    #[serde(rename = "name", default)]
-    pub name: String,
-    
-    #[serde(rename = "description", default)]
-    pub description: Option<String>,
-
-    #[serde(rename = "Parameter", default)]
-    pub parameters: Vec<Parameter>,
-
-    #[serde(rename = "Return", default)]
-    pub returns: Vec<Parameter>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Parameter {
-
-    #[serde(rename = "name", default)]
-    pub name: String,
-
-    #[serde(rename = "description", default)]
-    pub description: Option<String>,
-
-    #[serde(rename = "type", default)]
-    pub r#type: String,
+    pub fn is_param_blittable(&self, param: &Parameter) -> bool {
+        if param.array.unwrap_or(false) {
+            return false;
+        }
+        return self.is_type_blittable(self.get_type(&param.r#type));
+    }
 }

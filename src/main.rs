@@ -7,18 +7,17 @@ mod interface;
 mod from;
 mod to;
 
-use crate::from::writer::FromWriter;
-use crate::to::writer::ToWriter;
+use crate::interface::*;
+use crate::from::*;
+use crate::to::*;
 
-use std::fs;
 use serde_xml_rs::from_reader;
 use strip_bom::StripBom;
-
-use std::fs::File;
-use std::io::BufWriter;
-
-use std::path::PathBuf;
 use structopt::StructOpt;
+
+use std::fs::{read_to_string, File};
+use std::io::BufWriter;
+use std::path::PathBuf;
 
 // Define a struct called Opts
 #[derive(Debug, StructOpt)]
@@ -48,14 +47,14 @@ fn main() {
 
     println!("Generating FFI to call {} from {} :)", opts.to_lang, opts.from_lang);
     println!("Interface file: {}", interface_path.display());
-    let interface_str = fs::read_to_string(interface_path).unwrap();
+    let interface_str = read_to_string(interface_path).unwrap();
     let interface_str_no_bom = interface_str.strip_bom().to_string();
-    let mut interface: interface::Interface = from_reader(interface_str_no_bom.as_bytes()).unwrap();
+    let mut interface: Interface = from_reader(interface_str_no_bom.as_bytes()).unwrap();
     interface.initialize();
 
     // FROM
     let mut from_output_writer = match opts.from_lang.to_ascii_lowercase().as_str() {
-        "c#" | "cs" | "csharp" => crate::from::csharp::CsharpWriter,
+        "c#" | "cs" | "csharp" => CsharpWriter,
         _ => panic!("From {} is not supported!", opts.from_lang)
     };
     let from_output_path = match opts.from_output_path {
@@ -68,10 +67,9 @@ fn main() {
     println!("Output {} file: {}", opts.from_lang, from_output_path.display());
     from_output_writer.write(&mut from_output_buf_writer, &interface);
 
-
     // TO
     let mut to_output_writer = match opts.to_lang.to_ascii_lowercase().as_str() {
-        "c" => crate::to::c::CWriter,
+        "c" => CWriter,
         _ => panic!("To {} is not supported!", opts.to_lang)
     };
     let to_output_path = match opts.to_output_path {
