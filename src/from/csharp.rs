@@ -81,16 +81,17 @@ impl FromWriter for CsharpWriter {
         write!("using System.Runtime.InteropServices;");
 
         write!();
-        write!("using int8 = sbyte;");
-        write!("using uint8 = byte;");
-        write!("using int16 = Int16;");
-        write!("using uint16 = UInt16;");
-        write!("using int32 = Int32;");
-        write!("using uint32 = UInt32;");
-        write!("using int64 = Int64;");
-        write!("using uint64 = UInt64;");
-        write!("using float32 = float;");
-        write!("using float64 = double;");
+        write!("using int8 = System.SByte;");
+        write!("using uint8 = System.Byte;");
+        write!("using int16 = System.Int16;");
+        write!("using uint16 = System.UInt16;");
+        write!("using int32 = System.Int32;");
+        write!("using uint32 = System.UInt32;");
+        write!("using int64 = System.Int64;");
+        write!("using uint64 = System.UInt64;");
+        write!("using float16 = System.Half;");
+        write!("using float32 = System.Single;");
+        write!("using float64 = System.Double;");
         
         write!();
         write!("namespace {}", match &interface.namespace { Some(n) => n, None => "FFIDJI" }); // Could use unwrap_or() ?
@@ -190,9 +191,7 @@ impl FromWriter for CsharpWriter {
 
                 write!();
                 write!("[DllImport(LIBRARY_NAME)]");
-                write!("private static {} {}_FFI({})", return_type_name, method.name, parameters_str);
-                write!("{");
-                write!("}");
+                write!("private extern static {} {}_FFI({});", return_type_name, method.name, parameters_str);
             }
 
             {
