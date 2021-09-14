@@ -59,7 +59,7 @@ fn main() {
     };
     let from_output_path = match opts.from_output_path {
         Some(path) => path,
-        None => PathBuf::from(format!(r"sample/output.{}", from_output_writer.file_extension())),
+        None => PathBuf::from(format!(r"sample/from/output.{}", from_output_writer.file_extension())),
     };
     let from_output_file = File::create(&from_output_path).unwrap();
     let mut from_output_buf_writer = BufWriter::new(from_output_file);
@@ -74,7 +74,7 @@ fn main() {
     };
     let to_output_path = match opts.to_output_path {
         Some(path) => path,
-        None => PathBuf::from(format!(r"sample/output.{}", to_output_writer.file_extension())),
+        None => PathBuf::from(format!(r"sample/to/output.{}", to_output_writer.file_extension())),
     };
     let to_output_file = File::create(&to_output_path).unwrap();
     let mut to_output_buf_writer = BufWriter::new(to_output_file);

@@ -66,7 +66,7 @@ impl FromWriter for CsharpWriter {
                 let return_type = $param;
                 let mut return_type_name = return_type.r#type.clone();
                 if return_type.array.unwrap_or(false) {
-                    return_type_name = "IntPtr".to_string();
+                    return_type_name = format!("Arr<{}>", return_type_name);
                 } else if !interface.is_param_blittable(&return_type) {
                     return_type_name = "IntPtr".to_string();
                 }
@@ -79,6 +79,7 @@ impl FromWriter for CsharpWriter {
         write!();
         write!("using System;");
         write!("using System.Runtime.InteropServices;");
+        write!("using System.Runtime.CompilerServices;");
 
         write!();
         write!("using int8 = System.SByte;");
@@ -100,6 +101,53 @@ impl FromWriter for CsharpWriter {
         write!("{");
 
         write!("public const string LIBRARY_NAME = \"MyLibrary.dll\";");
+
+        // Write utilities
+        write!();
+        write!("private readonly struct Arr<T>");
+        write!("{");
+        write!("public readonly IntPtr ptr;");
+        write!("public readonly int size;");
+        write!("public Arr(IntPtr ptr, int size)");
+        write!("{");
+        write!("this.ptr = ptr;");
+        write!("this.size = size;");
+        write!("}");
+        write!("}");
+        write!();
+        write!("private unsafe static T[] CopyArray<T>(IntPtr ptr, int size) where T : unmanaged");
+        write!("{");
+        write!("int length = size * Marshal.SizeOf<T>();");
+        write!("T[] array = new T[size];");
+        write!("GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);");
+        write!("void* u_ptr = ptr.ToPointer();");
+        write!("void* u_dst = handle.AddrOfPinnedObject().ToPointer();");
+        write!("Unsafe.CopyBlock(u_ptr, u_dst, (uint)length);");
+        write!("handle.Free();");
+        write!("return array;");
+        write!("}");
+        write!();
+        write!("private static T[] Convert<T>(Arr<T> arr) where T : unmanaged");
+        write!("{");
+        write!("return CopyArray<T>(arr.ptr, arr.size);");
+        write!("}");
+        write!();
+        write!("private static T Convert<T>(T obj) where T : unmanaged");
+        write!("{");
+        write!("return obj;");
+        write!("}");
+        write!();
+        write!("private unsafe static Arr<T> Convert<T>(T[] arr) where T : unmanaged");
+        write!("{");
+        write!("int length = arr.Length * Marshal.SizeOf<T>();");
+        write!("IntPtr ptr = Marshal.AllocHGlobal(length);");
+        write!("GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);");
+        write!("void* u_dst = ptr.ToPointer();");
+        write!("void* u_ptr = handle.AddrOfPinnedObject().ToPointer();");
+        write!("Unsafe.CopyBlock(u_ptr, u_dst, (uint)length);");
+        write!("handle.Free();");
+        write!("return new Arr<T>(ptr, arr.Length);");
+        write!("}");
 
         for r#type in &interface.types
         {
@@ -169,6 +217,15 @@ impl FromWriter for CsharpWriter {
                 indentation = indentation - 1;
                 write!("};");
                 write!("}");
+
+                write!();
+                write!("private unsafe static {}[] Convert(Arr<{}_FFI> arr)", r#type.name, r#type.name);
+                write!("{");
+                write!("var array_ffi = CopyArray<{}_FFI>(arr.ptr, arr.size);", r#type.name);
+                write!("var array = new {}[arr.size];", r#type.name);
+                write!("for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);");
+                write!("return array;");
+                write!("}");
             }
         }
 
@@ -202,11 +259,18 @@ impl FromWriter for CsharpWriter {
                     .collect::<Vec<String>>()
                     .join(", ");
 
+                let convert_parameters_str = parameters
+                    .into_iter()
+                    .map(|p| format!("Convert({})", p.name.clone()))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+
                 let return_type_name = cc!(method.returns.len() == 0 => "void".to_string(), method.returns[0].r#type.clone());
 
                 write!();
                 write!("public static {} {}({})", return_type_name, method.name, parameters_str);
                 write!("{");
+                write!("return Convert({}_FFI({}));", method.name, convert_parameters_str);
                 write!("}");
             }
         }

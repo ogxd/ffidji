@@ -21,9 +21,14 @@
         <Return name="C" type="int32"/>
     </Method>
 
-    <Method name="MyMethod">
+    <!-- <Method name="MyMethod">
         <Parameter name="blittableStruct" type="MyBlittableStruct"/>
         <Return name="nonBlittableStruct" type="MyNonBlittableStruct"/>
     </Method>
+
+    <Method name="MyMethod2">
+        <Parameter name="nonBlittableStruct" type="MyNonBlittableStruct"/>
+        <Return name="blittableStruct" type="MyBlittableStruct"/>
+    </Method> -->
 
 </Interface>
