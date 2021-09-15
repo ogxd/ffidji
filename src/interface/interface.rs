@@ -72,6 +72,8 @@ impl Interface {
                 }
             }
 
+            // Todo: Verify that method names are unique.
+
             self.types_map = Some(new_types_map);
         }
     }

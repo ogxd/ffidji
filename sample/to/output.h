@@ -18,7 +18,23 @@ typedef unsigned long uint64;
 typedef float float32;
 typedef double float64;
 
-__declspec(dllimport) int32 Add(int32 A, int32 B);
+struct PairToSum
+{ 
+    int32 a;
+    int32 b;
+};
+
+struct ArrayToSum
+{ 
+    int32* intsToSum_ptr;
+    int intsToSum_len;
+};
+
+__declspec(dllimport) int32 Sum(int32 A, int32 B);
+
+__declspec(dllimport) int32 SumPair(PairToSum input);
+
+__declspec(dllimport) int32 SumArray(ArrayToSum input);
 
 #ifdef __cplusplus
 } 

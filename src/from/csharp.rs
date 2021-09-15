@@ -100,7 +100,7 @@ impl FromWriter for CsharpWriter {
         write!("public static class {}", match &interface.name { Some(n) => n, None => "MyInterface" });
         write!("{");
 
-        write!("public const string LIBRARY_NAME = \"MyLibrary.dll\";");
+        write!("public const string LIBRARY_NAME = \"MyNativeLibrary.dll\";");
 
         // Write utilities
         write!();
@@ -120,9 +120,9 @@ impl FromWriter for CsharpWriter {
         write!("int length = size * Marshal.SizeOf<T>();");
         write!("T[] array = new T[size];");
         write!("GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);");
-        write!("void* u_ptr = ptr.ToPointer();");
+        write!("void* u_src = ptr.ToPointer();");
         write!("void* u_dst = handle.AddrOfPinnedObject().ToPointer();");
-        write!("Unsafe.CopyBlock(u_ptr, u_dst, (uint)length);");
+        write!("Unsafe.CopyBlock(u_dst, u_src, (uint)length);");
         write!("handle.Free();");
         write!("return array;");
         write!("}");
@@ -143,8 +143,8 @@ impl FromWriter for CsharpWriter {
         write!("IntPtr ptr = Marshal.AllocHGlobal(length);");
         write!("GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);");
         write!("void* u_dst = ptr.ToPointer();");
-        write!("void* u_ptr = handle.AddrOfPinnedObject().ToPointer();");
-        write!("Unsafe.CopyBlock(u_ptr, u_dst, (uint)length);");
+        write!("void* u_src = handle.AddrOfPinnedObject().ToPointer();");
+        write!("Unsafe.CopyBlock(u_dst, u_src, (uint)length);");
         write!("handle.Free();");
         write!("return new Arr<T>(ptr, arr.Length);");
         write!("}");
@@ -247,7 +247,7 @@ impl FromWriter for CsharpWriter {
                 }
 
                 write!();
-                write!("[DllImport(LIBRARY_NAME)]");
+                write!("[DllImport(LIBRARY_NAME, EntryPoint = \"{}\")]", method.name);
                 write!("private extern static {} {}_FFI({});", return_type_name, method.name, parameters_str);
             }
 

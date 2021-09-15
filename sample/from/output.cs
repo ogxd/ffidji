@@ -38,9 +38,9 @@ namespace FFIDJI
             int length = size * Marshal.SizeOf<T>();
             T[] array = new T[size];
             GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
-            void* u_ptr = ptr.ToPointer();
+            void* u_src = ptr.ToPointer();
             void* u_dst = handle.AddrOfPinnedObject().ToPointer();
-            Unsafe.CopyBlock(u_ptr, u_dst, (uint)length);
+            Unsafe.CopyBlock(u_dst, u_src, (uint)length);
             handle.Free();
             return array;
         } 
@@ -61,65 +61,77 @@ namespace FFIDJI
             IntPtr ptr = Marshal.AllocHGlobal(length);
             GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);
             void* u_dst = ptr.ToPointer();
-            void* u_ptr = handle.AddrOfPinnedObject().ToPointer();
-            Unsafe.CopyBlock(u_ptr, u_dst, (uint)length);
+            void* u_src = handle.AddrOfPinnedObject().ToPointer();
+            Unsafe.CopyBlock(u_dst, u_src, (uint)length);
             handle.Free();
             return new Arr<T>(ptr, arr.Length);
         } 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct MyBlittableStruct
+        public struct PairToSum
         { 
-            public int32 foo;
-            public int32 bar;
+            public int32 a;
+            public int32 b;
         } 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct MyNonBlittableStruct
+        public struct ArrayToSum
         { 
-            public int32[] fooArray;
-            public int32[] barArray;
+            public int32[] intsToSum;
         } 
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct MyNonBlittableStruct_FFI
+        private struct ArrayToSum_FFI
         { 
-            public Arr<int32> fooArray;
-            public Arr<int32> barArray;
+            public Arr<int32> intsToSum;
         } 
 
-        private static MyNonBlittableStruct Convert(MyNonBlittableStruct_FFI data_FFI)
+        private static ArrayToSum Convert(ArrayToSum_FFI data_FFI)
         { 
-            return new MyNonBlittableStruct
+            return new ArrayToSum
             { 
-                fooArray = Convert(data_FFI.fooArray),
-                barArray = Convert(data_FFI.barArray),
+                intsToSum = Convert(data_FFI.intsToSum),
             };
         } 
 
-        private static MyNonBlittableStruct_FFI Convert(MyNonBlittableStruct data)
+        private static ArrayToSum_FFI Convert(ArrayToSum data)
         { 
-            return new MyNonBlittableStruct_FFI
+            return new ArrayToSum_FFI
             { 
-                fooArray = Convert(data.fooArray),
-                barArray = Convert(data.barArray),
+                intsToSum = Convert(data.intsToSum),
             };
         } 
 
-        private unsafe static MyNonBlittableStruct[] Convert(Arr<MyNonBlittableStruct_FFI> arr)
+        private unsafe static ArrayToSum[] Convert(Arr<ArrayToSum_FFI> arr)
         { 
-            var array_ffi = CopyArray<MyNonBlittableStruct_FFI>(arr.ptr, arr.size);
-            var array = new MyNonBlittableStruct[arr.size];
+            var array_ffi = CopyArray<ArrayToSum_FFI>(arr.ptr, arr.size);
+            var array = new ArrayToSum[arr.size];
             for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);
             return array;
         } 
 
-        [DllImport(LIBRARY_NAME)]
-        private extern static int32 Add(int32 A, int32 B);
+        [DllImport(LIBRARY_NAME, EntryPoint = "Sum")]
+        private extern static int32 Sum_FFI(int32 A, int32 B);
 
-        public static int32 Add1(int32 A, int32 B)
+        public static int32 Sum(int32 A, int32 B)
         { 
-            return Convert(Add(Convert(A), Convert(B)));
+            return Convert(Sum_FFI(Convert(A), Convert(B)));
+        } 
+
+        [DllImport(LIBRARY_NAME, EntryPoint = "SumPair")]
+        private extern static int32 SumPair_FFI(PairToSum input);
+
+        public static int32 SumPair(PairToSum input)
+        { 
+            return Convert(SumPair_FFI(Convert(input)));
+        } 
+
+        [DllImport(LIBRARY_NAME, EntryPoint = "SumArray")]
+        private extern static int32 SumArray_FFI(ArrayToSum_FFI input);
+
+        public static int32 SumArray(ArrayToSum input)
+        { 
+            return Convert(SumArray_FFI(Convert(input)));
         } 
     } 
 } 

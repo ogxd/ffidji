@@ -1,32 +1,31 @@
 ﻿<Interface name="SampleInterface">
 
-    <Type name="MyBlittableStruct">
-        <Field name="foo" type="int32"/>
-        <Field name="bar" type="int32"/>
+    <Type name="PairToSum">
+        <Field name="a" type="int32"/>
+        <Field name="b" type="int32"/>
     </Type>
 
-    <Type name="MyNonBlittableStruct">
-        <Field name="fooArray" type="int32" array="true"/>
-        <Field name="barArray" type="int32" array="true"/>
+    <Type name="ArrayToSum">
+        <Field name="intsToSum" type="int32" array="true"/>
     </Type>
 
-    <Enum name="MyEnum">
-        <Field name="foo" type="int32"/>
-        <Field name="bar" type="int32"/>
-    </Enum>
-
-    <Method name="Add">
+    <Method name="Sum">
         <Parameter name="A" type="int32"/>
         <Parameter name="B" type="int32"/>
         <Return name="C" type="int32"/>
     </Method>
 
-    <!-- <Method name="MyMethod">
-        <Parameter name="blittableStruct" type="MyBlittableStruct"/>
-        <Return name="nonBlittableStruct" type="MyNonBlittableStruct"/>
+    <Method name="SumPair">
+        <Parameter name="input" type="PairToSum"/>
+        <Return name="sum" type="int32"/>
     </Method>
 
-    <Method name="MyMethod2">
+    <Method name="SumArray">
+        <Parameter name="input" type="ArrayToSum"/>
+        <Return name="sum" type="int32"/>
+    </Method>
+
+    <!-- <Method name="MyMethod2">
         <Parameter name="nonBlittableStruct" type="MyNonBlittableStruct"/>
         <Return name="blittableStruct" type="MyBlittableStruct"/>
     </Method> -->
