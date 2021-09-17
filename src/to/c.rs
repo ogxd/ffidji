@@ -43,22 +43,9 @@ impl ToWriter for CWriter {
                 let return_type = $param;
                 let mut return_type_name = return_type.r#type.clone();
                 if return_type.array.unwrap_or(false) {
-                    return_type_name = return_type_name + "[]";
+                    return_type_name = return_type_name + "[]"; // This is not supported... Needs a change on Array types
                 } else if !interface.is_param_blittable(&return_type) {
-                    return_type_name = return_type_name + "_FFI";
-                }
-                return_type_name
-            }}
-        }
-
-        macro_rules! param_name_or_ptr {
-            ($param:expr) => {{
-                let return_type = $param;
-                let mut return_type_name = return_type.r#type.clone();
-                if return_type.array.unwrap_or(false) {
-                    return_type_name = format!("Arr<{}>", return_type_name);
-                } else if !interface.is_param_blittable(&return_type) {
-                    return_type_name = "IntPtr".to_string();
+                    return_type_name = return_type_name;
                 }
                 return_type_name
             }}
@@ -68,6 +55,7 @@ impl ToWriter for CWriter {
         write!();
 
         write!("#include <stdint.h>");
+        write!("#include <stdlib.h>");
 
         write!();
         write!("#ifdef __cplusplus");
@@ -86,6 +74,18 @@ impl ToWriter for CWriter {
         write!("typedef unsigned long uint64;");
         write!("typedef float float32;");
         write!("typedef double float64;");
+
+        write!();
+        write!("__declspec(dllexport) inline void* Alloc_FFI(int32 length)");
+        write!("{");
+        write!("return (void*)malloc(length);");
+        write!("}");
+
+        write!();
+        write!("__declspec(dllexport) inline void Free_FFI(void* ptr)");
+        write!("{");
+        write!("free(ptr);");
+        write!("}");
 
         for r#type in &interface.types
         {
@@ -126,7 +126,7 @@ impl ToWriter for CWriter {
             }
 
             write!();
-            write!("__declspec(dllimport) {} {}({});", return_type_name, method.name, parameters_str);
+            write!("__declspec(dllexport) {} {}({});", return_type_name, method.name, parameters_str);
         }
 
         write!();

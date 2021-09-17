@@ -114,6 +114,7 @@ impl FromWriter for CsharpWriter {
         write!("this.size = size;");
         write!("}");
         write!("}");
+
         write!();
         write!("private unsafe static T[] CopyArray<T>(IntPtr ptr, int size) where T : unmanaged");
         write!("{");
@@ -126,21 +127,24 @@ impl FromWriter for CsharpWriter {
         write!("handle.Free();");
         write!("return array;");
         write!("}");
+
         write!();
         write!("private static T[] Convert<T>(Arr<T> arr) where T : unmanaged");
         write!("{");
         write!("return CopyArray<T>(arr.ptr, arr.size);");
         write!("}");
+
         write!();
         write!("private static T Convert<T>(T obj) where T : unmanaged");
         write!("{");
         write!("return obj;");
         write!("}");
+
         write!();
         write!("private unsafe static Arr<T> Convert<T>(T[] arr) where T : unmanaged");
         write!("{");
         write!("int length = arr.Length * Marshal.SizeOf<T>();");
-        write!("IntPtr ptr = Marshal.AllocHGlobal(length);");
+        write!("IntPtr ptr = Alloc(length);");
         write!("GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);");
         write!("void* u_dst = ptr.ToPointer();");
         write!("void* u_src = handle.AddrOfPinnedObject().ToPointer();");
@@ -148,6 +152,14 @@ impl FromWriter for CsharpWriter {
         write!("handle.Free();");
         write!("return new Arr<T>(ptr, arr.Length);");
         write!("}");
+
+        write!();
+        write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Free_FFI\")]");
+        write!("private static extern void Free(IntPtr ptr);");
+
+        write!();
+        write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Alloc_FFI\")]");
+        write!("private static extern IntPtr Alloc(int length);");
 
         for r#type in &interface.types
         {
@@ -173,6 +185,25 @@ impl FromWriter for CsharpWriter {
 
             // FFI type and conversions (if not blittable)
             if !interface.is_type_blittable(r#type) {
+
+                write!();
+                write!("private static unsafe void Free(ArrayToSum_FFI input)");
+                write!("{");
+                for field in &r#type.fields {
+                    if !interface.is_type_blittable(interface.get_type(&field.r#type)) {
+                        if field.array.unwrap_or(false) {
+                            write!("for (int i = 0; i < input.{}.size; i++)", field.name);
+                            write!("{");
+                            write!("Free(input.{}.ptr[i]);", field.name);
+                            write!("}");
+                        }
+                        write!("Free(input.{});", field.name);
+                    } else if field.array.unwrap_or(false) {
+                        write!("Free(input.{}.ptr);", field.name);
+                    }
+                }
+                write!("}");
+
                 write!();
                 write!("[StructLayout(LayoutKind.Sequential)]");
                 write!("private struct {}_FFI", r#type.name);
@@ -261,7 +292,7 @@ impl FromWriter for CsharpWriter {
 
                 let convert_parameters_str = parameters
                     .into_iter()
-                    .map(|p| format!("Convert({})", p.name.clone()))
+                    .map(|p| format!("{}_ffi", p.name.clone()))
                     .collect::<Vec<String>>()
                     .join(", ");
 
@@ -270,7 +301,31 @@ impl FromWriter for CsharpWriter {
                 write!();
                 write!("public static {} {}({})", return_type_name, method.name, parameters_str);
                 write!("{");
-                write!("return Convert({}_FFI({}));", method.name, convert_parameters_str);
+                for parameter in &method.parameters
+                {
+                    write!("var {}_ffi = Convert({});", parameter.name, parameter.name);
+                }
+                if method.returns.len() != 0 {
+                    write!("var result_ffi = {}_FFI({});", method.name, convert_parameters_str);
+                } else {
+                    write!("{}_FFI({});", method.name, convert_parameters_str);
+                }
+                for parameter in &method.parameters
+                {
+                    if !interface.is_type_blittable(interface.get_type(&parameter.r#type)) {
+                        write!("Free({}_ffi);", parameter.name);
+                    }
+                }
+                if method.returns.len() != 0 {
+                    let ret = &method.returns[0];
+                    write!("var result = Convert(result_ffi);");
+                    if !interface.is_type_blittable(interface.get_type(&ret.r#type)) {
+                        write!("Free(result_ffi);");
+                    }
+                    write!("return result;");
+                } else {
+                    write!("Convert(result_ffi);");
+                }
                 write!("}");
             }
         }

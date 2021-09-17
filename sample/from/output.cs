@@ -58,7 +58,7 @@ namespace FFIDJI
         private unsafe static Arr<T> Convert<T>(T[] arr) where T : unmanaged
         { 
             int length = arr.Length * Marshal.SizeOf<T>();
-            IntPtr ptr = Marshal.AllocHGlobal(length);
+            IntPtr ptr = Alloc(length);
             GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);
             void* u_dst = ptr.ToPointer();
             void* u_src = handle.AddrOfPinnedObject().ToPointer();
@@ -66,6 +66,12 @@ namespace FFIDJI
             handle.Free();
             return new Arr<T>(ptr, arr.Length);
         } 
+
+        [DllImport(LIBRARY_NAME, EntryPoint = "Free_FFI")]
+        private static extern void Free(IntPtr ptr);
+
+        [DllImport(LIBRARY_NAME, EntryPoint = "Alloc_FFI")]
+        private static extern IntPtr Alloc(int length);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct PairToSum
@@ -78,6 +84,11 @@ namespace FFIDJI
         public struct ArrayToSum
         { 
             public int32[] intsToSum;
+        } 
+
+        private static unsafe void Free(ArrayToSum_FFI input)
+        { 
+            Free(input.intsToSum.ptr);
         } 
 
         [StructLayout(LayoutKind.Sequential)]
@@ -115,7 +126,11 @@ namespace FFIDJI
 
         public static int32 Sum(int32 A, int32 B)
         { 
-            return Convert(Sum_FFI(Convert(A), Convert(B)));
+            var A_ffi = Convert(A);
+            var B_ffi = Convert(B);
+            var result_ffi = Sum_FFI(A_ffi, B_ffi);
+            var result = Convert(result_ffi);
+            return result;
         } 
 
         [DllImport(LIBRARY_NAME, EntryPoint = "SumPair")]
@@ -123,7 +138,10 @@ namespace FFIDJI
 
         public static int32 SumPair(PairToSum input)
         { 
-            return Convert(SumPair_FFI(Convert(input)));
+            var input_ffi = Convert(input);
+            var result_ffi = SumPair_FFI(input_ffi);
+            var result = Convert(result_ffi);
+            return result;
         } 
 
         [DllImport(LIBRARY_NAME, EntryPoint = "SumArray")]
@@ -131,7 +149,24 @@ namespace FFIDJI
 
         public static int32 SumArray(ArrayToSum input)
         { 
-            return Convert(SumArray_FFI(Convert(input)));
+            var input_ffi = Convert(input);
+            var result_ffi = SumArray_FFI(input_ffi);
+            Free(input_ffi);
+            var result = Convert(result_ffi);
+            return result;
+        } 
+
+        [DllImport(LIBRARY_NAME, EntryPoint = "Reverse")]
+        private extern static ArrayToSum_FFI Reverse_FFI(ArrayToSum_FFI input);
+
+        public static ArrayToSum Reverse(ArrayToSum input)
+        { 
+            var input_ffi = Convert(input);
+            var result_ffi = Reverse_FFI(input_ffi);
+            Free(input_ffi);
+            var result = Convert(result_ffi);
+            Free(result_ffi);
+            return result;
         } 
     } 
 } 

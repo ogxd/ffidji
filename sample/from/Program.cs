@@ -13,6 +13,7 @@ namespace output
             Console.WriteLine("-> " + FFIDJI.SampleInterface.Sum(1, 2));
             Console.WriteLine("-> " + FFIDJI.SampleInterface.SumPair(new FFIDJI.SampleInterface.PairToSum { a = 1, b = 2 }));
             Console.WriteLine("-> " + FFIDJI.SampleInterface.SumArray(new FFIDJI.SampleInterface.ArrayToSum { intsToSum = new int[] { 1, 2 } }));
+            Console.WriteLine(string.Join(", ", FFIDJI.SampleInterface.Reverse(new FFIDJI.SampleInterface.ArrayToSum { intsToSum = new int[] { 1, 2, 3 } }).intsToSum));
             Console.ReadKey();
         }
     }
