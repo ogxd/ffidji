@@ -1,7 +1,38 @@
 ﻿<Interface name="SampleInterface">
-    <Method name="Add">
-        <Parameter name="A" type="Int32"/>
-        <Parameter name="B" type="Int32"/>
-        <Return name="C" type="Int32"/>
+
+    <Type name="PairToSum">
+        <Field name="a" type="int32"/>
+        <Field name="b" type="int32"/>
+    </Type>
+
+    <Type name="ArrayToSum">
+        <Field name="intsToSum" type="int32" array="true"/>
+    </Type>
+
+    <Method name="Sum">
+        <Parameter name="A" type="int32"/>
+        <Parameter name="B" type="int32"/>
+        <Return name="C" type="int32"/>
     </Method>
+
+    <Method name="SumPair">
+        <Parameter name="input" type="PairToSum"/>
+        <Return name="sum" type="int32"/>
+    </Method>
+
+    <Method name="SumArray">
+        <Parameter name="input" type="ArrayToSum"/>
+        <Return name="sum" type="int32"/>
+    </Method>
+
+    <Method name="Reverse">
+        <Parameter name="input" type="ArrayToSum"/>
+        <Return name="sum" type="ArrayToSum"/>
+    </Method>
+
+    <!-- <Method name="MyMethod2">
+        <Parameter name="nonBlittableStruct" type="MyNonBlittableStruct"/>
+        <Return name="blittableStruct" type="MyBlittableStruct"/>
+    </Method> -->
+
 </Interface>
