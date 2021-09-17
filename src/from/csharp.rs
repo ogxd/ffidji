@@ -118,7 +118,7 @@ impl FromWriter for CsharpWriter {
         write!();
         write!("private unsafe static T[] CopyArray<T>(IntPtr ptr, int size) where T : unmanaged");
         write!("{");
-        write!("int length = size * Marshal.SizeOf<T>();");
+        write!("int length = size * sizeof(T);");
         write!("T[] array = new T[size];");
         write!("void* u_src = ptr.ToPointer();");
         write!("fixed (T* u_dst = &array[0])");
