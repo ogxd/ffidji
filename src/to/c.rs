@@ -87,10 +87,8 @@ impl ToWriter for CWriter {
         write!("free(ptr);");
         write!("}");
 
-        for r#type in &interface.types
-        {
-            if r#type.base_type
-            {
+        for r#type in &interface.types {
+            if r#type.base_type {
                 continue;
             }
 
@@ -98,8 +96,7 @@ impl ToWriter for CWriter {
             write!();
             write!("struct {}", r#type.name);
             write!("{");
-            for field in &r#type.fields
-            {
+            for field in &r#type.fields {
                 if field.array.unwrap_or(false) {
                     write!("{}* {}_ptr;", field.r#type, field.name);
                     write!("int {}_len;", field.name);

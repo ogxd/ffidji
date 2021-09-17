@@ -120,11 +120,11 @@ impl FromWriter for CsharpWriter {
         write!("{");
         write!("int length = size * Marshal.SizeOf<T>();");
         write!("T[] array = new T[size];");
-        write!("GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);");
         write!("void* u_src = ptr.ToPointer();");
-        write!("void* u_dst = handle.AddrOfPinnedObject().ToPointer();");
+        write!("fixed (T* u_dst = &array[0])");
+        write!("{");
         write!("Unsafe.CopyBlock(u_dst, u_src, (uint)length);");
-        write!("handle.Free();");
+        write!("}");
         write!("return array;");
         write!("}");
 
@@ -141,16 +141,16 @@ impl FromWriter for CsharpWriter {
         write!("}");
 
         write!();
-        write!("private unsafe static Arr<T> Convert<T>(T[] arr) where T : unmanaged");
+        write!("private unsafe static Arr<T> Convert<T>(T[] array) where T : unmanaged");
         write!("{");
-        write!("int length = arr.Length * Marshal.SizeOf<T>();");
+        write!("int length = array.Length * sizeof(T);");
         write!("IntPtr ptr = Alloc(length);");
-        write!("GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);");
         write!("void* u_dst = ptr.ToPointer();");
-        write!("void* u_src = handle.AddrOfPinnedObject().ToPointer();");
+        write!("fixed (T* u_src = &array[0])");
+        write!("{");
         write!("Unsafe.CopyBlock(u_dst, u_src, (uint)length);");
-        write!("handle.Free();");
-        write!("return new Arr<T>(ptr, arr.Length);");
+        write!("}");
+        write!("return new Arr<T>(ptr, array.Length);");
         write!("}");
 
         write!();
@@ -161,10 +161,8 @@ impl FromWriter for CsharpWriter {
         write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Alloc_FFI\")]");
         write!("private static extern IntPtr Alloc(int length);");
 
-        for r#type in &interface.types
-        {
-            if r#type.base_type
-            {
+        for r#type in &interface.types {
+            if r#type.base_type {
                 continue;
             }
 
@@ -173,10 +171,8 @@ impl FromWriter for CsharpWriter {
             write!("[StructLayout(LayoutKind.Sequential)]");
             write!("public struct {}", r#type.name);
             write!("{");
-            for field in &r#type.fields
-            {
-                if field.description.is_some()
-                {
+            for field in &r#type.fields {
+                if field.description.is_some() {
                     write!("// {}", field.description.as_ref().unwrap());
                 }
                 write!("public {} {};", param_name!(field), field.name);
@@ -208,8 +204,7 @@ impl FromWriter for CsharpWriter {
                 write!("[StructLayout(LayoutKind.Sequential)]");
                 write!("private struct {}_FFI", r#type.name);
                 write!("{");
-                for field in &r#type.fields
-                {
+                for field in &r#type.fields {
                     write!("public {} {};", param_name_or_ptr!(field), field.name);
                 }
                 write!("}");
@@ -219,15 +214,9 @@ impl FromWriter for CsharpWriter {
                 write!("{");
                 write!("return new {}", r#type.name);
                 write!("{");
-                for field in &r#type.fields
-                {
-                    // Todo:
-                    // if base type, = assignment
-                    // if blittable, marshal struct, (Generic method ?)
-                    // if array of blittable, marshal array, (Generic method ?)
-                    // otherwise, call convert
+                for field in &r#type.fields {
                     if interface.is_param_blittable(field) {
-
+                        write!("{} = data_FFI.{},", field.name, field.name);
                     } else {
                         write!("{} = Convert(data_FFI.{}),", field.name, field.name);
                     }
@@ -241,8 +230,7 @@ impl FromWriter for CsharpWriter {
                 write!("{");
                 write!("return new {}_FFI", r#type.name);
                 write!("{");
-                for field in &r#type.fields
-                {
+                for field in &r#type.fields {
                     write!("{} = Convert(data.{}),", field.name, field.name);
                 }
                 indentation = indentation - 1;
@@ -261,8 +249,7 @@ impl FromWriter for CsharpWriter {
         }
 
         // Write methods
-        for method in &interface.methods
-        {
+        for method in &interface.methods {
             {
                 let parameters = &method.parameters;
                 let parameters_str = parameters
@@ -301,8 +288,7 @@ impl FromWriter for CsharpWriter {
                 write!();
                 write!("public static {} {}({})", return_type_name, method.name, parameters_str);
                 write!("{");
-                for parameter in &method.parameters
-                {
+                for parameter in &method.parameters {
                     write!("var {}_ffi = Convert({});", parameter.name, parameter.name);
                 }
                 if method.returns.len() != 0 {
@@ -310,8 +296,7 @@ impl FromWriter for CsharpWriter {
                 } else {
                     write!("{}_FFI({});", method.name, convert_parameters_str);
                 }
-                for parameter in &method.parameters
-                {
+                for parameter in &method.parameters {
                     if !interface.is_type_blittable(interface.get_type(&parameter.r#type)) {
                         write!("Free({}_ffi);", parameter.name);
                     }
