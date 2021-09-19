@@ -3,7 +3,9 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Security;
 
+using char16 = System.Char;
 using int8 = System.SByte;
 using uint8 = System.Byte;
 using int16 = System.Int16;
@@ -20,7 +22,7 @@ namespace FFIDJI
 { 
     public static class SampleInterface
     { 
-        public const string LIBRARY_NAME = "MyNativeLibrary.dll";
+        public const string LIBRARY_NAME = "lib.dll";
 
         private readonly struct Arr<T>
         { 
@@ -35,13 +37,13 @@ namespace FFIDJI
 
         private unsafe static T[] CopyArray<T>(IntPtr ptr, int size) where T : unmanaged
         { 
-            int length = size * Marshal.SizeOf<T>();
+            int length = size * sizeof(T);
             T[] array = new T[size];
-            GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             void* u_src = ptr.ToPointer();
-            void* u_dst = handle.AddrOfPinnedObject().ToPointer();
-            Unsafe.CopyBlock(u_dst, u_src, (uint)length);
-            handle.Free();
+            fixed (T* u_dst = &array[0])
+            { 
+                Unsafe.CopyBlock(u_dst, u_src, (uint)length);
+            } 
             return array;
         } 
 
@@ -55,23 +57,30 @@ namespace FFIDJI
             return obj;
         } 
 
-        private unsafe static Arr<T> Convert<T>(T[] arr) where T : unmanaged
+        private unsafe static Arr<T> Convert<T>(T[] array) where T : unmanaged
         { 
-            int length = arr.Length * Marshal.SizeOf<T>();
-            IntPtr ptr = Alloc(length);
-            GCHandle handle = GCHandle.Alloc(arr, GCHandleType.Pinned);
-            void* u_dst = ptr.ToPointer();
-            void* u_src = handle.AddrOfPinnedObject().ToPointer();
-            Unsafe.CopyBlock(u_dst, u_src, (uint)length);
-            handle.Free();
-            return new Arr<T>(ptr, arr.Length);
+            return Convert(new ReadOnlySpan<T>(array));
         } 
 
-        [DllImport(LIBRARY_NAME, EntryPoint = "Free_FFI")]
-        private static extern void Free(IntPtr ptr);
+        private unsafe static Arr<T> Convert<T>(ReadOnlySpan<T> array) where T : unmanaged
+        { 
+            int length = array.Length * sizeof(T);
+            IntPtr ptr = Alloc(length);
+            void* u_dst = ptr.ToPointer();
+            fixed (T* u_src = &array[0])
+            { 
+                Unsafe.CopyBlock(u_dst, u_src, (uint)length);
+            } 
+            return new Arr<T>(ptr, array.Length);
+        } 
 
+        [SuppressUnmanagedCodeSecurity]
         [DllImport(LIBRARY_NAME, EntryPoint = "Alloc_FFI")]
         private static extern IntPtr Alloc(int length);
+
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport(LIBRARY_NAME, EntryPoint = "Free_FFI")]
+        private static extern void Free(IntPtr ptr, int length);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct PairToSum
@@ -86,15 +95,15 @@ namespace FFIDJI
             public int32[] intsToSum;
         } 
 
-        private static unsafe void Free(ArrayToSum_FFI input)
-        { 
-            Free(input.intsToSum.ptr);
-        } 
-
         [StructLayout(LayoutKind.Sequential)]
         private struct ArrayToSum_FFI
         { 
             public Arr<int32> intsToSum;
+        } 
+
+        private static unsafe void Free(ArrayToSum_FFI input)
+        { 
+            Free(input.intsToSum.ptr, input.intsToSum.size);
         } 
 
         private static ArrayToSum Convert(ArrayToSum_FFI data_FFI)
@@ -121,6 +130,42 @@ namespace FFIDJI
             return array;
         } 
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct string_FFI
+        { 
+            public Arr<char16> utf16_char;
+        } 
+
+        private static unsafe void Free(string_FFI input)
+        { 
+            Free(input.utf16_char.ptr, input.utf16_char.size);
+        } 
+
+        private static string Convert(string_FFI data_FFI)
+        { 
+            unsafe
+            { 
+                return new string((char*)data_FFI.utf16_char.ptr);
+            } 
+        } 
+
+        private static string_FFI Convert(string data)
+        { 
+            return new string_FFI
+            { 
+                utf16_char = Convert(data.AsSpan())
+            };
+        } 
+
+        private unsafe static string[] Convert(Arr<string_FFI> arr)
+        { 
+            var array_ffi = CopyArray<string_FFI>(arr.ptr, arr.size);
+            var array = new string[arr.size];
+            for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);
+            return array;
+        } 
+
+        [SuppressUnmanagedCodeSecurity]
         [DllImport(LIBRARY_NAME, EntryPoint = "Sum")]
         private extern static int32 Sum_FFI(int32 A, int32 B);
 
@@ -130,42 +175,6 @@ namespace FFIDJI
             var B_ffi = Convert(B);
             var result_ffi = Sum_FFI(A_ffi, B_ffi);
             var result = Convert(result_ffi);
-            return result;
-        } 
-
-        [DllImport(LIBRARY_NAME, EntryPoint = "SumPair")]
-        private extern static int32 SumPair_FFI(PairToSum input);
-
-        public static int32 SumPair(PairToSum input)
-        { 
-            var input_ffi = Convert(input);
-            var result_ffi = SumPair_FFI(input_ffi);
-            var result = Convert(result_ffi);
-            return result;
-        } 
-
-        [DllImport(LIBRARY_NAME, EntryPoint = "SumArray")]
-        private extern static int32 SumArray_FFI(ArrayToSum_FFI input);
-
-        public static int32 SumArray(ArrayToSum input)
-        { 
-            var input_ffi = Convert(input);
-            var result_ffi = SumArray_FFI(input_ffi);
-            Free(input_ffi);
-            var result = Convert(result_ffi);
-            return result;
-        } 
-
-        [DllImport(LIBRARY_NAME, EntryPoint = "Reverse")]
-        private extern static ArrayToSum_FFI Reverse_FFI(ArrayToSum_FFI input);
-
-        public static ArrayToSum Reverse(ArrayToSum input)
-        { 
-            var input_ffi = Convert(input);
-            var result_ffi = Reverse_FFI(input_ffi);
-            Free(input_ffi);
-            var result = Convert(result_ffi);
-            Free(result_ffi);
             return result;
         } 
     } 

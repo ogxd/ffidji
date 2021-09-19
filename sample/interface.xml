@@ -15,7 +15,7 @@
         <Return name="C" type="int32"/>
     </Method>
 
-    <Method name="SumPair">
+    <!-- <Method name="SumPair">
         <Parameter name="input" type="PairToSum"/>
         <Return name="sum" type="int32"/>
     </Method>
@@ -33,7 +33,7 @@
     <Method name="ReverseString">
         <Parameter name="input" type="string"/>
         <Return name="output" type="string"/>
-    </Method>
+    </Method> -->
 
     <!-- <Method name="MyMethod2">
         <Parameter name="nonBlittableStruct" type="MyNonBlittableStruct"/>

@@ -1,0 +1,5 @@
+mod output;
+
+fn main() {
+    
+}

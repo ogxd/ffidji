@@ -11,6 +11,8 @@ use crate::interface::*;
 use crate::from::*;
 use crate::to::*;
 
+mod output;
+
 use serde_xml_rs::from_reader;
 use strip_bom::StripBom;
 use structopt::StructOpt;
@@ -23,11 +25,11 @@ use std::path::PathBuf;
 #[derive(Debug, StructOpt)]
 struct Opts {
 
-    #[structopt(short = "f", long = "from_lang", default_value = "cs")]
+    #[structopt(short = "f", long = "from_lang", default_value = "csharp")]
     from_lang: String,
     from_output_path: Option<PathBuf>,
 
-    #[structopt(short = "t", long = "to_lang", default_value = "c")]
+    #[structopt(short = "t", long = "to_lang", default_value = "rust")]
     to_lang: String,
     to_output_path: Option<PathBuf>,
 
@@ -36,7 +38,7 @@ struct Opts {
 }
 
 fn main() {
-
+    
     let opts: Opts = Opts::from_args();
 
     // INTERFACE
@@ -59,7 +61,7 @@ fn main() {
     };
     let from_output_path = match opts.from_output_path {
         Some(path) => path,
-        None => PathBuf::from(format!(r"sample/from/output.{}", from_output_writer.file_extension())),
+        None => PathBuf::from(format!(r"sample/from/{}/output.{}", opts.from_lang, from_output_writer.file_extension())),
     };
     let from_output_file = File::create(&from_output_path).unwrap();
     let mut from_output_buf_writer = BufWriter::new(from_output_file);
@@ -68,17 +70,18 @@ fn main() {
     from_output_writer.write(&mut from_output_buf_writer, &interface);
 
     // TO
-    let mut to_output_writer = match opts.to_lang.to_ascii_lowercase().as_str() {
-        "c" => CWriter,
+    let mut to_output_writer: Box<dyn ToWriter> = match opts.to_lang.to_ascii_lowercase().as_str() {
+        "c" => Box::new(CWriter),
+        "rust" | "rs" => Box::new(RustWriter),
         _ => panic!("To {} is not supported!", opts.to_lang)
     };
     let to_output_path = match opts.to_output_path {
         Some(path) => path,
-        None => PathBuf::from(format!(r"sample/to/output.{}", to_output_writer.file_extension())),
+        None => PathBuf::from(format!(r"sample/to/{}/output.{}", opts.to_lang, to_output_writer.file_extension())),
     };
     let to_output_file = File::create(&to_output_path).unwrap();
     let mut to_output_buf_writer = BufWriter::new(to_output_file);
 
     println!("Output {} file: {}", opts.to_lang, to_output_path.display());
-    to_output_writer.write(&mut to_output_buf_writer, &interface);
+    (*to_output_writer).write(&mut to_output_buf_writer, &interface);
 }

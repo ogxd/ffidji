@@ -131,7 +131,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetDir)$(ProjectName).dll" "$(SolutionDir)\..\from\bin\net5.0\$(ProjectName).dll"</Command>
+      <Command>copy /Y "$(TargetDir)$(ProjectName).dll" "$(SolutionDir)\..\..\from\csharp\bin\net5.0\$(ProjectName).dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

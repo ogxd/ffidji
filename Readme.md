@@ -1,12 +1,13 @@
 # FFIDJI
 
-Foreign Function Interface code generator
+FFIDJI is a Foreign Function Interface code generator.  
+You can use it to automatically generate bindings for simple to complex types and delegates between different languages, like calling Rust or C native code from C# for instance.
 
 ## Todo
 
 - [x] Support from C#
 - [x] Support to C
-- [ ] Support to rust
+- [x] Support to rust
 - [x] Add string type
 - [ ] Add enum type
 - [ ] Prevent illegal names
@@ -27,12 +28,12 @@ Foreign Function Interface code generator
     <Type name="ArrayToSum">
         <Field name="intsToSum" type="int32" array="true"/>
     </Type>
+    <!--define your methods-->
     <Method name="Sum">
         <Parameter name="A" type="int32"/>
         <Parameter name="B" type="int32"/>
         <Return name="C" type="int32"/>
     </Method>
-    <!--define your methods-->
     <Method name="SumPair">
         <Parameter name="input" type="PairToSum"/>
         <Return name="sum" type="int32"/>

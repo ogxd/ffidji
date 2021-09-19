@@ -81,7 +81,7 @@ impl FromWriter for CsharpWriter {
         write!("using System.Runtime.InteropServices;");
         write!("using System.Runtime.CompilerServices;");
         write!("using System.Security;");
-        
+
         write!();
         write!("using char16 = System.Char;");
         write!("using int8 = System.SByte;");
@@ -163,13 +163,13 @@ impl FromWriter for CsharpWriter {
 
         write!();
         write!("[SuppressUnmanagedCodeSecurity]");
-        write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Free_FFI\")]");
-        write!("private static extern void Free(IntPtr ptr);");
+        write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Alloc_FFI\")]");
+        write!("private static extern IntPtr Alloc(int length);");
 
         write!();
         write!("[SuppressUnmanagedCodeSecurity]");
-        write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Alloc_FFI\")]");
-        write!("private static extern IntPtr Alloc(int length);");
+        write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Free_FFI\")]");
+        write!("private static extern void Free(IntPtr ptr, int length);");
 
         for r#type in &interface.types {
             if r#type.base_type {
@@ -218,7 +218,7 @@ impl FromWriter for CsharpWriter {
                         }
                         write!("Free(input.{});", field.name);
                     } else if field.array.unwrap_or(false) {
-                        write!("Free(input.{}.ptr);", field.name);
+                        write!("Free(input.{}.ptr, input.{}.size);", field.name, field.name);
                     }
                 }
                 write!("}");

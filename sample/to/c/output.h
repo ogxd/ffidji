@@ -25,7 +25,7 @@ __declspec(dllexport) inline void* Alloc_FFI(int32 length)
     return (void*)malloc(length);
 } 
 
-__declspec(dllexport) inline void Free_FFI(void* ptr)
+__declspec(dllexport) inline void Free_FFI(void* ptr, int32 length)
 { 
     free(ptr);
 } 
@@ -39,24 +39,16 @@ struct PairToSum
 struct ArrayToSum
 { 
     int32* intsToSum_ptr;
-    int intsToSum_len;
+    int32 intsToSum_len;
 };
 
 struct string
 { 
     char16* utf16_char_ptr;
-    int utf16_char_len;
+    int32 utf16_char_len;
 };
 
 __declspec(dllexport) int32 Sum(int32 A, int32 B);
-
-__declspec(dllexport) int32 SumPair(PairToSum input);
-
-__declspec(dllexport) int32 SumArray(ArrayToSum input);
-
-__declspec(dllexport) ArrayToSum Reverse(ArrayToSum input);
-
-__declspec(dllexport) string ReverseString(string input);
 
 #ifdef __cplusplus
 } 
