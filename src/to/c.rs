@@ -64,6 +64,7 @@ impl ToWriter for CWriter {
         write!("#endif");
 
         write!();
+        write!("typedef char16_t char16;");
         write!("typedef int8_t int8;");
         write!("typedef uint8_t uint8;");
         write!("typedef int16_t int16;");

@@ -30,3 +30,14 @@ ArrayToSum Reverse(ArrayToSum A)
 	}
 	return B;
 }
+
+string ReverseString(string A) {
+	string B;
+	B.utf16_char_ptr = (char16*)malloc(A.utf16_char_len * sizeof(int32));
+	B.utf16_char_len = A.utf16_char_len;
+	for (int i = 0; i < A.utf16_char_len; i++)
+	{
+		B.utf16_char_ptr[i] = A.utf16_char_ptr[A.utf16_char_len - i - 1];
+	}
+	return B;
+}

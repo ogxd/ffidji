@@ -80,8 +80,10 @@ impl FromWriter for CsharpWriter {
         write!("using System;");
         write!("using System.Runtime.InteropServices;");
         write!("using System.Runtime.CompilerServices;");
-
+        write!("using System.Security;");
+        
         write!();
+        write!("using char16 = System.Char;");
         write!("using int8 = System.SByte;");
         write!("using uint8 = System.Byte;");
         write!("using int16 = System.Int16;");
@@ -143,6 +145,12 @@ impl FromWriter for CsharpWriter {
         write!();
         write!("private unsafe static Arr<T> Convert<T>(T[] array) where T : unmanaged");
         write!("{");
+        write!("return Convert(new ReadOnlySpan<T>(array));");
+        write!("}");
+
+        write!();
+        write!("private unsafe static Arr<T> Convert<T>(ReadOnlySpan<T> array) where T : unmanaged");
+        write!("{");
         write!("int length = array.Length * sizeof(T);");
         write!("IntPtr ptr = Alloc(length);");
         write!("void* u_dst = ptr.ToPointer();");
@@ -154,10 +162,12 @@ impl FromWriter for CsharpWriter {
         write!("}");
 
         write!();
+        write!("[SuppressUnmanagedCodeSecurity]");
         write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Free_FFI\")]");
         write!("private static extern void Free(IntPtr ptr);");
 
         write!();
+        write!("[SuppressUnmanagedCodeSecurity]");
         write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Alloc_FFI\")]");
         write!("private static extern IntPtr Alloc(int length);");
 
@@ -166,24 +176,37 @@ impl FromWriter for CsharpWriter {
                 continue;
             }
 
+            let is_string = r#type.name == "string";
+
             // Public type
-            write!();
-            write!("[StructLayout(LayoutKind.Sequential)]");
-            write!("public struct {}", r#type.name);
-            write!("{");
-            for field in &r#type.fields {
-                if field.description.is_some() {
-                    write!("// {}", field.description.as_ref().unwrap());
+            if !is_string {
+                write!();
+                write!("[StructLayout(LayoutKind.Sequential)]");
+                write!("public struct {}", r#type.name);
+                write!("{");
+                for field in &r#type.fields {
+                    if field.description.is_some() {
+                        write!("// {}", field.description.as_ref().unwrap());
+                    }
+                    write!("public {} {};", param_name!(field), field.name);
                 }
-                write!("public {} {};", param_name!(field), field.name);
+                write!("}");
             }
-            write!("}");
 
             // FFI type and conversions (if not blittable)
             if !interface.is_type_blittable(r#type) {
-
+                // FFI unmanaged structure
                 write!();
-                write!("private static unsafe void Free(ArrayToSum_FFI input)");
+                write!("[StructLayout(LayoutKind.Sequential)]");
+                write!("private struct {}_FFI", r#type.name);
+                write!("{");
+                for field in &r#type.fields {
+                    write!("public {} {};", param_name_or_ptr!(field), field.name);
+                }
+                write!("}");
+                // Free FFI unmanaged data
+                write!();
+                write!("private static unsafe void Free({}_FFI input)", r#type.name);
                 write!("{");
                 for field in &r#type.fields {
                     if !interface.is_type_blittable(interface.get_type(&field.r#type)) {
@@ -199,39 +222,41 @@ impl FromWriter for CsharpWriter {
                     }
                 }
                 write!("}");
-
-                write!();
-                write!("[StructLayout(LayoutKind.Sequential)]");
-                write!("private struct {}_FFI", r#type.name);
-                write!("{");
-                for field in &r#type.fields {
-                    write!("public {} {};", param_name_or_ptr!(field), field.name);
-                }
-                write!("}");
-
+                // Convert from unmanaged to managed
                 write!();
                 write!("private static {} Convert({}_FFI data_FFI)", r#type.name, r#type.name);
                 write!("{");
-                write!("return new {}", r#type.name);
-                write!("{");
-                for field in &r#type.fields {
-                    if interface.is_param_blittable(field) {
-                        write!("{} = data_FFI.{},", field.name, field.name);
-                    } else {
-                        write!("{} = Convert(data_FFI.{}),", field.name, field.name);
+                if is_string {
+                    write!("unsafe");
+                    write!("{");
+                    write!("return new string((char*)data_FFI.utf16_char.ptr);");
+                    write!("}");
+                } else {
+                    write!("return new {}", r#type.name);
+                    write!("{");
+                    for field in &r#type.fields {
+                        if interface.is_param_blittable(field) {
+                            write!("{} = data_FFI.{},", field.name, field.name);
+                        } else {
+                            write!("{} = Convert(data_FFI.{}),", field.name, field.name);
+                        }
                     }
+                    indentation = indentation - 1;
+                    write!("};");
                 }
-                indentation = indentation - 1;
-                write!("};");
                 write!("}");
-
+                // Convert from managed to unmanaged
                 write!();
                 write!("private static {}_FFI Convert({} data)", r#type.name, r#type.name);
                 write!("{");
                 write!("return new {}_FFI", r#type.name);
                 write!("{");
-                for field in &r#type.fields {
-                    write!("{} = Convert(data.{}),", field.name, field.name);
+                if is_string {
+                    write!("utf16_char = Convert(data.AsSpan())");
+                } else {
+                    for field in &r#type.fields {
+                        write!("{} = Convert(data.{}),", field.name, field.name);
+                    }
                 }
                 indentation = indentation - 1;
                 write!("};");
@@ -265,6 +290,7 @@ impl FromWriter for CsharpWriter {
                 }
 
                 write!();
+                write!("[SuppressUnmanagedCodeSecurity]");
                 write!("[DllImport(LIBRARY_NAME, EntryPoint = \"{}\")]", method.name);
                 write!("private extern static {} {}_FFI({});", return_type_name, method.name, parameters_str);
             }

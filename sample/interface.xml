@@ -30,6 +30,11 @@
         <Return name="sum" type="ArrayToSum"/>
     </Method>
 
+    <Method name="ReverseString">
+        <Parameter name="input" type="string"/>
+        <Return name="output" type="string"/>
+    </Method>
+
     <!-- <Method name="MyMethod2">
         <Parameter name="nonBlittableStruct" type="MyNonBlittableStruct"/>
         <Return name="blittableStruct" type="MyBlittableStruct"/>

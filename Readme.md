@@ -7,7 +7,7 @@ Foreign Function Interface code generator
 - [x] Support from C#
 - [x] Support to C
 - [ ] Support to rust
-- [ ] Add string type
+- [x] Add string type
 - [ ] Add enum type
 - [ ] Prevent illegal names
 - [ ] Add benchmark

@@ -8,6 +8,7 @@ extern "C"
 { 
 #endif
 
+typedef char16_t char16;
 typedef int8_t int8;
 typedef uint8_t uint8;
 typedef int16_t int16;
@@ -41,6 +42,12 @@ struct ArrayToSum
     int intsToSum_len;
 };
 
+struct string
+{ 
+    char16* utf16_char_ptr;
+    int utf16_char_len;
+};
+
 __declspec(dllexport) int32 Sum(int32 A, int32 B);
 
 __declspec(dllexport) int32 SumPair(PairToSum input);
@@ -48,6 +55,8 @@ __declspec(dllexport) int32 SumPair(PairToSum input);
 __declspec(dllexport) int32 SumArray(ArrayToSum input);
 
 __declspec(dllexport) ArrayToSum Reverse(ArrayToSum input);
+
+__declspec(dllexport) string ReverseString(string input);
 
 #ifdef __cplusplus
 } 

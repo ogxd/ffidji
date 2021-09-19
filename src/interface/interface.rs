@@ -40,6 +40,9 @@ impl Interface {
             self.types.push(Type { name: "uint64".to_string(), description: None, fields: Vec::new(), base_type: true });
             self.types.push(Type { name: "float32".to_string(), description: None, fields: Vec::new(), base_type: true });
             self.types.push(Type { name: "float64".to_string(), description: None, fields: Vec::new(), base_type: true });
+            self.types.push(Type { name: "char16".to_string(), description: None, fields: Vec::new(), base_type: true });
+
+            self.types.push(Type { name: "string".to_string(), description: None, fields: vec![ Parameter { name: String::from("utf16_char"), r#type: String::from("char16"), description: None, array: Some(true) } ], base_type: false });
 
             // Add custom types
             for r#type in &self.types {
@@ -95,8 +98,7 @@ impl Interface {
     pub fn is_type_blittable(&self, r#type: &Type) -> bool {
         if r#type.base_type {
             return true;
-        }
-        else {
+        } else {
             for field in &r#type.fields {
                 if !self.is_param_blittable(field) {
                     return false;
