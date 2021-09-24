@@ -218,7 +218,7 @@ impl FromWriter for CsharpWriter {
                         }
                         write!("Free(input.{});", field.name);
                     } else if field.array.unwrap_or(false) {
-                        write!("Free(input.{}.ptr, input.{}.size);", field.name, field.name);
+                        write!("Free(input.{}.ptr, input.{}.size * sizeof({}));", field.name, field.name, field.r#type);
                     }
                 }
                 write!("}");

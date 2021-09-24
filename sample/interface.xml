@@ -15,6 +15,13 @@
         <Return name="C" type="int32"/>
     </Method>
 
+
+    <Method name="Reverse">
+        <Parameter name="input" type="ArrayToSum"/>
+        <Return name="sum" type="ArrayToSum"/>
+    </Method>
+
+
     <!-- <Method name="SumPair">
         <Parameter name="input" type="PairToSum"/>
         <Return name="sum" type="int32"/>
@@ -23,11 +30,6 @@
     <Method name="SumArray">
         <Parameter name="input" type="ArrayToSum"/>
         <Return name="sum" type="int32"/>
-    </Method>
-
-    <Method name="Reverse">
-        <Parameter name="input" type="ArrayToSum"/>
-        <Return name="sum" type="ArrayToSum"/>
     </Method>
 
     <Method name="ReverseString">

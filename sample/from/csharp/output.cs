@@ -22,7 +22,7 @@ namespace FFIDJI
 { 
     public static class SampleInterface
     { 
-        public const string LIBRARY_NAME = "lib.dll";
+        public const string LIBRARY_NAME = "MyNativeLibrary.dll";
 
         private readonly struct Arr<T>
         { 
@@ -103,7 +103,7 @@ namespace FFIDJI
 
         private static unsafe void Free(ArrayToSum_FFI input)
         { 
-            Free(input.intsToSum.ptr, input.intsToSum.size);
+            Free(input.intsToSum.ptr, input.intsToSum.size * Marshal.SizeOf<int32>());
         } 
 
         private static ArrayToSum Convert(ArrayToSum_FFI data_FFI)
@@ -138,7 +138,7 @@ namespace FFIDJI
 
         private static unsafe void Free(string_FFI input)
         { 
-            Free(input.utf16_char.ptr, input.utf16_char.size);
+            Free(input.utf16_char.ptr, input.utf16_char.size * Marshal.SizeOf<char16>());
         } 
 
         private static string Convert(string_FFI data_FFI)
@@ -175,6 +175,20 @@ namespace FFIDJI
             var B_ffi = Convert(B);
             var result_ffi = Sum_FFI(A_ffi, B_ffi);
             var result = Convert(result_ffi);
+            return result;
+        } 
+
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport(LIBRARY_NAME, EntryPoint = "Reverse")]
+        private extern static ArrayToSum_FFI Reverse_FFI(ArrayToSum_FFI input);
+
+        public static ArrayToSum Reverse(ArrayToSum input)
+        { 
+            var input_ffi = Convert(input);
+            var result_ffi = Reverse_FFI(input_ffi);
+            Free(input_ffi);
+            var result = Convert(result_ffi);
+            Free(result_ffi);
             return result;
         } 
     } 
