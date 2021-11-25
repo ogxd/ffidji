@@ -9,3 +9,6 @@ serde = "1.0.130"
 serde_derive = "1.0.130"
 strip_bom = "1.0.0"
 structopt = "0.2.15"
+
+[[bin]]
+name = "ffidji"
