@@ -1,5 +1,5 @@
-use crate::interface;
-use crate::from::writer::FromWriter;
+use crate::interface::Interface;
+use crate::base::Writer;
 
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -16,11 +16,11 @@ macro_rules! cc {
     }}
 }
 
-impl FromWriter for CsharpWriter {
+impl Writer for CsharpWriter {
     
     fn file_extension(&self) -> String { "cs".to_string() }
 
-    fn write(&mut self, writer: &mut BufWriter<File>, interface: &interface::Interface)
+    fn write(&mut self, writer: &mut BufWriter<File>, interface: &Interface)
     {
         let mut indentation = 0;
 
@@ -343,5 +343,23 @@ impl FromWriter for CsharpWriter {
 
         write!("}");
         write!("}");
+    }
+
+    fn is_name_reserved(&self, name: &String) -> bool {
+        return match name.to_lowercase().as_ref() {
+            "abstract" | "as" | "base" | "bool" | "break" | "byte" | "case" | 
+            "catch" | "char" | "checked" | "class" | "const" | "continue" | "decimal" | 
+            "default" | "delegate" | "do" | "double" | "else" | "enum" | "event" | 
+            "explicit" | "extern" | "false" | "finally" | "fixed" | "float" | "for" | 
+            "foreach" | "goto" | "if" | "implicit" | "in" | "int" | 
+            "interface" | "internal" | "is" | "lock" | "long" | "namespace" | "new" | 
+            "null" | "object" | "operator" | "out" | "override" | "params" | 
+            "private" | "protected" | "public" | "readonly" | "ref" | "return" | "sbyte" | 
+            "sealed" | "short" | "sizeof" | "stackalloc" | "static" | "string" | "struct" | 
+            "switch" | "this" | "throw" | "true" | "try" | "typeof" | "uint" | 
+            "ulong" | "unchecked" | "unsafe" | "ushort" | "using" | "virtual" | "void" | 
+            "volatile" | "while" => true,
+            _ => false
+        }
     }
 }

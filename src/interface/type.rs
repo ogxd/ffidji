@@ -14,4 +14,7 @@ pub struct Type {
 
     #[serde(skip_deserializing)]
     pub base_type: bool,
+
+    #[serde(skip_deserializing)]
+    pub is_system: bool,
 }

@@ -3,6 +3,7 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_xml_rs;
 
+mod base;
 mod interface;
 mod from;
 mod to;
@@ -56,10 +57,11 @@ fn main() {
     interface.check_valid();
 
     // FROM
-    let mut from_output_writer = match opts.from_lang.to_ascii_lowercase().as_str() {
-        "c#" | "cs" | "csharp" => CsharpWriter,
+    let mut from_output_writer: Box<dyn base::Writer> = match opts.from_lang.to_ascii_lowercase().as_str() {
+        "c#" | "cs" | "csharp" => Box::new(CsharpWriter),
         _ => panic!("From {} is not supported!", opts.from_lang)
     };
+    interface.check_reserved(&*from_output_writer);
     let from_output_path = match opts.from_output_path {
         Some(path) => path,
         None => PathBuf::from(format!(r"sample/from/{}/output.{}", opts.from_lang, from_output_writer.file_extension())),
@@ -71,11 +73,12 @@ fn main() {
     from_output_writer.write(&mut from_output_buf_writer, &interface);
 
     // TO
-    let mut to_output_writer: Box<dyn ToWriter> = match opts.to_lang.to_ascii_lowercase().as_str() {
+    let mut to_output_writer: Box<dyn base::Writer> = match opts.to_lang.to_ascii_lowercase().as_str() {
         "c" => Box::new(CWriter),
         "rust" | "rs" => Box::new(RustWriter),
         _ => panic!("To {} is not supported!", opts.to_lang)
     };
+    interface.check_reserved(&*to_output_writer);
     let to_output_path = match opts.to_output_path {
         Some(path) => path,
         None => PathBuf::from(format!(r"sample/to/{}/output.{}", opts.to_lang, to_output_writer.file_extension())),
