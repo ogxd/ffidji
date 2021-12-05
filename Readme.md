@@ -3,6 +3,9 @@
 FFIDJI is a Foreign Function Interface code generator.  
 You can use it to automatically generate bindings for simple to complex types and delegates between different languages, like calling Rust or C native code from C# for instance.
 
+![crustsharp](https://raw.githubusercontent.com/ogxd/ffidji/master/docs/static/images/ppap.png)
+_(it actually works the same way with many different languages, checkout documentation to see what's supported)_
+
 ## Todo
 
 - [x] Support from C#
