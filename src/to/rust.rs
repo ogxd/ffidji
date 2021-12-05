@@ -1,12 +1,12 @@
-use crate::interface::{Interface as Interface};
-use crate::to::writer::ToWriter;
+use crate::interface::Interface;
+use crate::base::Writer;
 
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
 pub struct RustWriter;
 
-impl ToWriter for RustWriter {
+impl Writer for RustWriter {
     
     fn file_extension(&self) -> String { "rs".to_string() }
 
@@ -137,6 +137,24 @@ impl ToWriter for RustWriter {
             write!("pub extern \"C\" fn {}({}) -> {}", method.name, parameters_str, return_type_name);
             write!("{");
             write!("}");
+        }
+    }
+
+    fn is_name_reserved(&self, name: &String) -> bool {
+        return match name.to_lowercase().as_ref() {
+            "abstract" | "as" | "base" | "bool" | "break" | "byte" | "case" | 
+            "catch" | "char" | "checked" | "class" | "const" | "continue" | "decimal" | 
+            "default" | "delegate" | "do" | "double" | "else" | "enum" | "event" | 
+            "explicit" | "extern" | "false" | "finally" | "fixed" | "float" | "for" | 
+            "foreach" | "goto" | "if" | "implicit" | "in" | "int" | 
+            "interface" | "internal" | "is" | "lock" | "long" | "namespace" | "new" | 
+            "null" | "object" | "operator" | "out" | "override" | "params" | 
+            "private" | "protected" | "public" | "readonly" | "ref" | "return" | "sbyte" | 
+            "sealed" | "short" | "sizeof" | "stackalloc" | "static" | "string" | "struct" | 
+            "switch" | "this" | "throw" | "true" | "try" | "typeof" | "uint" | 
+            "ulong" | "unchecked" | "unsafe" | "ushort" | "using" | "virtual" | "void" | 
+            "volatile" | "while" => true,
+            _ => false
         }
     }
 }

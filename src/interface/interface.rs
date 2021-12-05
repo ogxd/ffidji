@@ -1,4 +1,5 @@
 use crate::interface::*;
+use crate::base::Writer;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Deserialize)]
@@ -28,22 +29,21 @@ impl Interface {
         if self.types_map.is_none() {
 
             let mut new_types_map: HashMap<String, Type> = HashMap::new();
-            let mut method_names: HashSet<String> = HashSet::new();
 
             // Add base types
-            self.types.push(Type { name: "int8".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "uint8".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "int16".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "uint16".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "int32".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "uint32".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "int64".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "uint64".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "float32".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "float64".to_string(), description: None, fields: Vec::new(), base_type: true });
-            self.types.push(Type { name: "char16".to_string(), description: None, fields: Vec::new(), base_type: true });
+            self.types.push(Type { name: "int8".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "uint8".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true});
+            self.types.push(Type { name: "int16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "uint16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "int32".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "uint32".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "int64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "uint64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "float32".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "float64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "char16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
 
-            self.types.push(Type { name: "string".to_string(), description: None, fields: vec![ Parameter { name: String::from("utf16_char"), r#type: String::from("char16"), description: None, array: Some(true) } ], base_type: false });
+            self.types.push(Type { name: "string".to_string(), description: None, fields: vec![ Parameter { name: String::from("utf16_char"), r#type: String::from("char16"), description: None, array: Some(true) } ], base_type: false, is_system: true });
 
             // Add custom types
             for r#type in &self.types {
@@ -95,6 +95,46 @@ impl Interface {
                     // Ensures that method names are unique.
                     if !method_names.insert(method.name.clone()) {
                         panic!("A method with name '{}' already exists.", &method.name);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn check_reserved(&self, writer: &dyn Writer) {
+        match &self.types_map {
+            None => panic!("Interface must be initialized first!"),
+            Some(_) => {
+
+                // Verify name in type and fields
+                for r#type in &self.types {
+                    if r#type.is_system {
+                        continue;
+                    }
+                    if writer.is_name_reserved(&r#type.name) {
+                        panic!("Type '{}''s name is reserved", &r#type.name);
+                    }
+                    for field in &r#type.fields {
+                        if writer.is_name_reserved(&field.name) {
+                            panic!("Type '{}''s field '{}''s name is reserved", &r#type.name, &field.name);
+                        }
+                    }
+                }
+
+                // Verify names in methods and parameters & returns
+                for method in &self.methods {
+                    if writer.is_name_reserved(&method.name) {
+                        panic!("Method '{}''s name is reserved", &method.name);
+                    }
+                    for parameter in &method.parameters {
+                        if writer.is_name_reserved(&parameter.name) {
+                            panic!("Method '{}''s parameter '{}''s name is reserved", &method.name, &parameter.name);
+                        }
+                    }
+                    for r#return in &method.returns {
+                        if writer.is_name_reserved(&r#return.name) {
+                            panic!("Method '{}''s return '{}''s name is reserved", &method.name, &r#return.name);
+                        }
                     }
                 }
             }
