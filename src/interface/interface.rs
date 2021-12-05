@@ -1,5 +1,5 @@
 use crate::interface::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Deserialize)]
 pub struct Interface {
@@ -28,6 +28,7 @@ impl Interface {
         if self.types_map.is_none() {
 
             let mut new_types_map: HashMap<String, Type> = HashMap::new();
+            let mut method_names: HashSet<String> = HashSet::new();
 
             // Add base types
             self.types.push(Type { name: "int8".to_string(), description: None, fields: Vec::new(), base_type: true });
@@ -46,38 +47,57 @@ impl Interface {
 
             // Add custom types
             for r#type in &self.types {
-                if new_types_map.contains_key(&r#type.name) {
+                if new_types_map.insert(r#type.name.clone(), r#type.clone()).is_some() {
                     panic!("Type '{}' already exists.", r#type.name);
                 }
-                new_types_map.insert(r#type.name.clone(), r#type.clone());
             }
-
-            // Verify type fields
-            for r#type in &self.types {
-                for field in &r#type.fields {
-                    if !new_types_map.contains_key(&field.r#type) {
-                        panic!("Type '{}' for {}.{} is undefined.", &field.r#type, r#type.name, &field.name);
-                    }
-                }
-            }
-
-            // Verify method parameters & returns
-            for methods in &self.methods {
-                for parameter in &methods.parameters {
-                    if !new_types_map.contains_key(&parameter.r#type) {
-                        panic!("Type '{}' for {}(..{}..) is undefined.", &parameter.r#type, methods.name, &parameter.name);
-                    }
-                }
-                for r#return in &methods.returns {
-                    if !new_types_map.contains_key(&r#return.r#type) {
-                        panic!("Type '{}' for {}(..) -> {} is undefined.", &r#return.r#type, methods.name, &r#return.name);
-                    }
-                }
-            }
-
-            // Todo: Verify that method names are unique.
 
             self.types_map = Some(new_types_map);
+        }
+    }
+
+    pub fn check_valid(&self)
+    {
+        match &self.types_map {
+            None => panic!("Interface must be initialized first!"),
+            Some(types_map) => {
+
+                // Verify type fields
+                for r#type in &self.types {
+                    for field in &r#type.fields {
+                        if !types_map.contains_key(&field.r#type) {
+                            panic!("Type '{}' for {}.{} is undefined.", &field.r#type, r#type.name, &field.name);
+                        }
+                    }
+                }
+
+                let mut method_names: HashSet<String> = HashSet::new();
+
+                // Verify method parameters & returns
+                for method in &self.methods {
+                    let mut parameter_names: HashSet<String> = HashSet::new();
+                    
+                    for parameter in &method.parameters {
+                        if !types_map.contains_key(&parameter.r#type) {
+                            panic!("Type '{}' for {}(..{}..) is undefined.", &parameter.r#type, method.name, &parameter.name);
+                        }
+                        // Ensures that method names are unique.
+                        if !parameter_names.insert(parameter.name.clone()) {
+                            panic!("A parameter with name '{}' already exists for method '{}'.", &parameter.name, &method.name);
+                        }
+                    }
+                    for r#return in &method.returns {
+                        if !types_map.contains_key(&r#return.r#type) {
+                            panic!("Type '{}' for {}(..) -> {} is undefined.", &r#return.r#type, method.name, &r#return.name);
+                        }
+                    }
+
+                    // Ensures that method names are unique.
+                    if !method_names.insert(method.name.clone()) {
+                        panic!("A method with name '{}' already exists.", &method.name);
+                    }
+                }
+            }
         }
     }
 

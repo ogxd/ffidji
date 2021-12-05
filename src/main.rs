@@ -53,6 +53,7 @@ fn main() {
     let interface_str_no_bom = interface_str.strip_bom().to_string();
     let mut interface: Interface = from_reader(interface_str_no_bom.as_bytes()).unwrap();
     interface.initialize();
+    interface.check_valid();
 
     // FROM
     let mut from_output_writer = match opts.from_lang.to_ascii_lowercase().as_str() {
@@ -83,5 +84,5 @@ fn main() {
     let mut to_output_buf_writer = BufWriter::new(to_output_file);
 
     println!("Output {} file: {}", opts.to_lang, to_output_path.display());
-    (*to_output_writer).write(&mut to_output_buf_writer, &interface);
+    to_output_writer.write(&mut to_output_buf_writer, &interface);
 }
