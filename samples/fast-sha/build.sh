@@ -1,0 +1,1 @@
+cargo run --manifest-path "../../Cargo.toml" -- -i "Interface.xml" -f "csharp/Interface.cs" -t "rust/interface.rs"

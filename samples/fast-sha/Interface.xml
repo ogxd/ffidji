@@ -1,0 +1,8 @@
+﻿<Interface name="SHA256_Rust">
+
+    <Method name="CalculateHash256">
+        <Parameter name="input" type="int8" array="true"/>
+        <Return name="sum" type="int8" array="true"/>
+    </Method>
+
+</Interface>

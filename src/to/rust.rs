@@ -122,7 +122,7 @@ impl Writer for RustWriter {
             let parameters = &method.parameters;
             let parameters_str = parameters
                 .into_iter()
-                .map(|p| [p.name.clone(), p.r#type.clone()].join(": "))
+                .map(|p| [p.name.clone(), param_name!(p)].join(": "))
                 .collect::<Vec<String>>()
                 .join(", ");
 
