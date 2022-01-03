@@ -12,3 +12,10 @@ structopt = "0.2.15"
 
 [[bin]]
 name = "ffidji"
+
+[lib]
+name = "ffidji"
+
+[[test]]
+name = "tests"
+path = "tests/tests.rs"
