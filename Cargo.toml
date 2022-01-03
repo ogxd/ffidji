@@ -19,3 +19,6 @@ name = "ffidji"
 [[test]]
 name = "tests"
 path = "tests/tests.rs"
+
+[dev-dependencies]
+rstest = "0.12.0"

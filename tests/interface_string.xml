@@ -1,0 +1,7 @@
+<Interface name="SampleInterface">
+
+    <Method name="SayHelloWorld">
+        <Return name="helloWorld" type="string"/>
+    </Method>
+
+</Interface>

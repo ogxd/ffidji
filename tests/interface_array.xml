@@ -1,0 +1,11 @@
+<Interface name="SampleInterface">
+
+    <Type name="Integers">
+        <Field name="integers" type="int32" array="true"/>
+    </Type>
+
+    <Method name="GetIntegers">
+        <Return name="integers" type="Integers"/>
+    </Method>
+    
+</Interface>

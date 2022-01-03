@@ -4,11 +4,15 @@ use ffidji;
 mod tests {
     use std::path::PathBuf;
     use std::process::Command;
+    use rstest::rstest;
 
     use super::*;
 
-    #[test]
-    fn test_generates_and_builds() {
+    #[rstest]
+    #[case("tests/interface_string.xml")]
+    #[case("tests/interface_array.xml")]
+    #[case("tests/interface_empty.xml")]
+    fn test_generates_and_builds(#[case] interface: &str) {
         println!("current dir: {:?}", std::env::current_dir());
 
         let opts = ffidji::Opts {
@@ -16,12 +20,12 @@ mod tests {
             from_output_path: Some(PathBuf::from("tests/csharp/interface.cs".to_owned())),
             to_lang: "rust".to_owned(),
             to_output_path: Some(PathBuf::from("tests/rust/interface.rs".to_owned())),
-            interface_path: Some(PathBuf::from("tests/interface.xml".to_owned())),
+            interface_path: Some(PathBuf::from(interface.to_owned())),
         };
 
         ffidji::execute(&opts);
 
-        let status =Command::new("dotnet")
+        let status = Command::new("dotnet")
             .arg("build")
             .arg("tests/csharp/Test.csproj")
             .arg("-o")

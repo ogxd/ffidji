@@ -39,19 +39,6 @@ pub extern "C" fn Free_FFI(ptr: *mut libc::c_void, length :int32)
     } 
 } 
 
-struct Profiler
-{ 
-    name: string,
-    description: string,
-    id: int32,
-} 
-
-struct Profilers
-{ 
-    profilers_ptr: *const Profiler,
-    profilers_len: int32,
-} 
-
 struct string
 { 
     utf16_char_ptr: *const char16,
@@ -59,6 +46,13 @@ struct string
 } 
 
 #[no_mangle]
-pub extern "C" fn GetAvailableProfilers() -> Profilers
+pub extern "C" fn SayHelloWorld() -> string
+{ 
+} 
+_len: int32,
+} 
+
+#[no_mangle]
+pub extern "C" fn GetIntegers() -> Integers
 { 
 } 

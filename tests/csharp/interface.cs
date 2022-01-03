@@ -83,105 +83,6 @@ namespace FFIDJI
         private static extern void Free(IntPtr ptr, int length);
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Profiler
-        { 
-            // false
-            public string name;
-            // false
-            public string description;
-            // false
-            public int32 id;
-        } 
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Profiler_FFI
-        { 
-            public string_FFI name;
-            public string_FFI description;
-            public int32 id;
-        } 
-
-        private static unsafe void Free(Profiler_FFI input)
-        { 
-            Free(input.name);
-            Free(input.description);
-        } 
-
-        private static Profiler Convert(Profiler_FFI data_FFI)
-        { 
-            return new Profiler
-            { 
-                name = Convert(data_FFI.name),
-                description = Convert(data_FFI.description),
-                id = data_FFI.id,
-            };
-        } 
-
-        private static Profiler_FFI Convert(Profiler data)
-        { 
-            return new Profiler_FFI
-            { 
-                name = Convert(data.name),
-                description = Convert(data.description),
-                id = Convert(data.id),
-            };
-        } 
-
-        private unsafe static Profiler[] Convert(Arr<Profiler_FFI> arr)
-        { 
-            var array_ffi = CopyArray<Profiler_FFI>(arr.ptr, arr.size);
-            var array = new Profiler[arr.size];
-            for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);
-            return array;
-        } 
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Profilers
-        { 
-            // true
-            public Profiler[] profilers;
-        } 
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Profilers_FFI
-        { 
-            public Arr<Profiler> profilers;
-        } 
-
-        private static unsafe void Free(Profilers_FFI input)
-        { 
-            for (int i = 0; i < input.profilers.size; i++)
-            { 
-                Free(input.profilers.ptr[i]);
-            } 
-            Free(input.profilers);
-        } 
-
-        private static Profilers Convert(Profilers_FFI data_FFI)
-        { 
-            return new Profilers
-            { 
-                profilers = Convert(data_FFI.profilers),
-            };
-        } 
-
-        private static Profilers_FFI Convert(Profilers data)
-        { 
-            return new Profilers_FFI
-            { 
-                profilers = Convert(data.profilers),
-            };
-        } 
-
-        private unsafe static Profilers[] Convert(Arr<Profilers_FFI> arr)
-        { 
-            var array_ffi = CopyArray<Profilers_FFI>(arr.ptr, arr.size);
-            var array = new Profilers[arr.size];
-            for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);
-            return array;
-        } 
-
-        [StructLayout(LayoutKind.Sequential)]
         private struct string_FFI
         { 
             public Arr<char16> utf16_char;
@@ -217,12 +118,52 @@ namespace FFIDJI
         } 
 
         [SuppressUnmanagedCodeSecurity]
-        [DllImport(LIBRARY_NAME, EntryPoint = "GetAvailableProfilers")]
-        private extern static Profilers GetAvailableProfilers_FFI();
+        [DllImport(LIBRARY_NAME, EntryPoint = "SayHelloWorld")]
+        private extern static string_FFI SayHelloWorld_FFI();
 
-        public static Profilers GetAvailableProfilers()
+        public static string SayHelloWorld()
         { 
-            var result_ffi = GetAvailableProfilers_FFI();
+            var result_ffi = SayHelloWorld_FFI();
+            var result = Convert(result_ffi);
+            Free(result_ffi);
+            return result;
+        } 
+    } 
+} 
+ar.ptr, input.utf16_char.size * sizeof(char16));
+        } 
+
+        private static string Convert(string_FFI data_FFI)
+        { 
+            unsafe
+            { 
+                return new string((char*)data_FFI.utf16_char.ptr);
+            } 
+        } 
+
+        private static string_FFI Convert(string data)
+        { 
+            return new string_FFI
+            { 
+                utf16_char = Convert(data.AsSpan())
+            };
+        } 
+
+        private unsafe static string[] Convert(Arr<string_FFI> arr)
+        { 
+            var array_ffi = CopyArray<string_FFI>(arr.ptr, arr.size);
+            var array = new string[arr.size];
+            for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);
+            return array;
+        } 
+
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport(LIBRARY_NAME, EntryPoint = "GetIntegers")]
+        private extern static Integers_FFI GetIntegers_FFI();
+
+        public static Integers GetIntegers()
+        { 
+            var result_ffi = GetIntegers_FFI();
             var result = Convert(result_ffi);
             Free(result_ffi);
             return result;
