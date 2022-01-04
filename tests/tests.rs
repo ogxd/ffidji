@@ -9,9 +9,10 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case("tests/interface_string.xml")]
-    #[case("tests/interface_array.xml")]
-    #[case("tests/interface_empty.xml")]
+    //#[case("tests/interface_empty.xml")]
+    #[case("tests/interface_structs.xml")]
+    //#[case("tests/interface_arrays.xml")]
+    //#[case("tests/interface_strings.xml")]
     fn test_generates_and_builds(#[case] interface: &str) {
         println!("current dir: {:?}", std::env::current_dir());
 

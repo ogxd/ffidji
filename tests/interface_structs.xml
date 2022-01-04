@@ -1,0 +1,30 @@
+<Interface name="InterfaceStructs">
+
+    <Type name="StructA">
+        <Field name="valueA" type="int8"/>
+        <Field name="valueB" type="int16"/>
+        <Field name="valueC" type="int32"/>
+        <Field name="valueD" type="int64"/>
+        <Field name="structB" type="StructB"/>
+    </Type>
+
+    <Type name="StructB">
+        <Field name="valueA" type="float16"/>
+        <Field name="valueB" type="float32"/>
+        <Field name="valueC" type="float64"/>
+        <Field name="structC" type="StructC"/>
+    </Type>
+
+    <Type name="StructC">
+        <Field name="valueA" type="uint8"/>
+        <Field name="valueB" type="uint16"/>
+        <Field name="valueC" type="uint32"/>
+        <Field name="valueD" type="uint64"/>
+    </Type>
+
+    <Method name="Passthrough">
+        <Parameter name="structIn" type="StructA"/>
+        <Return name="structOut" type="StructA"/>
+    </Method>
+
+</Interface>

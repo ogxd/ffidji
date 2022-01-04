@@ -1,0 +1,30 @@
+<Interface name="InterfaceArrays">
+
+    <Type name="Array">
+        <Field name="integers" type="int32" array="true"/>
+    </Type>
+
+    <Type name="ArrayOfArrays">
+        <Field name="array" type="Array" array="true"/>
+    </Type>
+
+    <Type name="ArrayOfArraysOfArrays">
+        <Field name="array" type="ArrayOfArrays" array="true"/>
+    </Type>
+
+    <Method name="SumArray">
+        <Parameter name="array" type="Array"/>
+        <Return name="sum" type="int32"/>
+    </Method>
+
+    <Method name="SumArrayOfArrays">
+        <Parameter name="arrayOfArrays" type="ArrayOfArrays"/>
+        <Return name="sum" type="int32"/>
+    </Method>
+
+    <Method name="SumArrayOfArraysOfArrays">
+        <Parameter name="arrayOfArraysOfArrays" type="ArrayOfArraysOfArrays"/>
+        <Return name="sum" type="int32"/>
+    </Method>
+
+</Interface>

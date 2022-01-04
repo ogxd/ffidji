@@ -50,27 +50,24 @@ impl Writer for CsharpWriter {
 
         macro_rules! param_name {
             ($param:expr) => {{
-                let return_type = $param;
-                let mut return_type_name = return_type.r#type.clone();
-                if return_type.array.unwrap_or(false) {
-                    return_type_name = return_type_name + "[]";
-                } else if !interface.is_param_blittable(&return_type) {
-                    return_type_name = return_type_name + "_FFI";
+                let mut type_name = $param.r#type.clone();
+                if $param.array.unwrap_or(false) {
+                    type_name = type_name + "[]";
                 }
-                return_type_name
+                type_name
             }}
         }
 
-        macro_rules! param_name_or_ptr {
+        macro_rules! param_name_ffi {
             ($param:expr) => {{
-                let return_type = $param;
-                let mut return_type_name = return_type.r#type.clone();
-                if return_type.array.unwrap_or(false) {
-                    return_type_name = format!("Arr<{}>", return_type_name);
-                } else if !interface.is_param_blittable(&return_type) {
-                    return_type_name = "IntPtr".to_string();
+                let mut type_name = $param.r#type.clone();
+                if !interface.is_type_blittable(interface.get_type(&$param.r#type)) {
+                    type_name = type_name + "_FFI";
                 }
-                return_type_name
+                if $param.array.unwrap_or(false) {
+                    type_name = format!("Arr<{}>", type_name);
+                }
+                type_name
             }}
         }
 
@@ -171,6 +168,12 @@ impl Writer for CsharpWriter {
         write!("[DllImport(LIBRARY_NAME, EntryPoint = \"Free_FFI\")]");
         write!("private static extern void Free(IntPtr ptr, int length);");
 
+        write!();
+        write!("private static unsafe void Free<T>(Arr<T> input) where T : unmanaged");
+        write!("{");
+        write!("Free(input.ptr, input.size * sizeof(T));");
+        write!("}");
+
         for r#type in &interface.types {
             if r#type.base_type {
                 continue;
@@ -201,7 +204,7 @@ impl Writer for CsharpWriter {
                 write!("private struct {}_FFI", r#type.name);
                 write!("{");
                 for field in &r#type.fields {
-                    write!("public {} {};", param_name_or_ptr!(field), field.name);
+                    write!("public {} {};", param_name_ffi!(field), field.name);
                 }
                 write!("}");
                 // Free FFI unmanaged data
@@ -213,7 +216,7 @@ impl Writer for CsharpWriter {
                         if field.array.unwrap_or(false) {
                             write!("for (int i = 0; i < input.{}.size; i++)", field.name);
                             write!("{");
-                            write!("Free(input.{}.ptr[i]);", field.name);
+                            write!("Free((({}_FFI*)input.{}.ptr)[i]);", field.r#type, field.name);
                             write!("}");
                         }
                         write!("Free(input.{});", field.name);
@@ -270,6 +273,16 @@ impl Writer for CsharpWriter {
                 write!("for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);");
                 write!("return array;");
                 write!("}");
+
+                write!();
+                write!("private unsafe static Arr<{}_FFI> Convert({}[] array)", r#type.name, r#type.name);
+                write!("{");
+                write!("int length = array.Length * sizeof({}_FFI);", r#type.name);
+                write!("IntPtr ptr = Alloc(length);");
+                write!("{}_FFI* u_dst = ({}_FFI*)ptr.ToPointer();", r#type.name, r#type.name);
+                write!("for (int i = 0; i < length; ++i) u_dst[i] = Convert(array[i]);");
+                write!("return new Arr<{}_FFI>(ptr, length);", r#type.name);
+                write!("}");
             }
         }
 
@@ -279,14 +292,14 @@ impl Writer for CsharpWriter {
                 let parameters = &method.parameters;
                 let parameters_str = parameters
                     .into_iter()
-                    .map(|p| format!("{} {}", param_name!(p), p.name))
+                    .map(|p| format!("{} {}", param_name_ffi!(p), p.name))
                     .collect::<Vec<String>>()
                     .join(", ");
 
                 let mut return_type_name = String::from("void");
                 if method.returns.len() != 0 {
                     let return_type = &method.returns[0];
-                    return_type_name = param_name!(return_type);
+                    return_type_name = param_name_ffi!(return_type);
                 }
 
                 write!();
@@ -299,7 +312,7 @@ impl Writer for CsharpWriter {
                 let parameters = &method.parameters;
                 let parameters_str = parameters
                     .into_iter()
-                    .map(|p| [p.r#type.clone(), p.name.clone()].join(" "))
+                    .map(|p| format!("{} {}", param_name!(p), p.name))
                     .collect::<Vec<String>>()
                     .join(", ");
 
@@ -309,7 +322,7 @@ impl Writer for CsharpWriter {
                     .collect::<Vec<String>>()
                     .join(", ");
 
-                let return_type_name = cc!(method.returns.len() == 0 => "void".to_string(), method.returns[0].r#type.clone());
+                let return_type_name = cc!(method.returns.len() == 0 => "void".to_string(), param_name!(method.returns[0]));
 
                 write!();
                 write!("public static {} {}({})", return_type_name, method.name, parameters_str);

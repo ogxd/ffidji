@@ -20,7 +20,7 @@ using float64 = System.Double;
 
 namespace FFIDJI
 { 
-    public static class SampleInterface
+    public static class InterfaceStructs
     { 
         public const string LIBRARY_NAME = "MyNativeLibrary.dll";
 
@@ -82,6 +82,39 @@ namespace FFIDJI
         [DllImport(LIBRARY_NAME, EntryPoint = "Free_FFI")]
         private static extern void Free(IntPtr ptr, int length);
 
+        private static unsafe void Free<T>(Arr<T> input) where T : unmanaged
+        { 
+            Free(input.ptr, input.size * sizeof(T));
+        } 
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct StructA
+        { 
+            public int8 valueA;
+            public int16 valueB;
+            public int32 valueC;
+            public int64 valueD;
+            public StructB structB;
+        } 
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct StructB
+        { 
+            public float16 valueA;
+            public float32 valueB;
+            public float64 valueC;
+            public StructC structC;
+        } 
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct StructC
+        { 
+            public uint8 valueA;
+            public uint16 valueB;
+            public uint32 valueC;
+            public uint64 valueD;
+        } 
+
         [StructLayout(LayoutKind.Sequential)]
         private struct string_FFI
         { 
@@ -117,55 +150,24 @@ namespace FFIDJI
             return array;
         } 
 
-        [SuppressUnmanagedCodeSecurity]
-        [DllImport(LIBRARY_NAME, EntryPoint = "SayHelloWorld")]
-        private extern static string_FFI SayHelloWorld_FFI();
-
-        public static string SayHelloWorld()
+        private unsafe static Arr<string_FFI> Convert(string[] array)
         { 
-            var result_ffi = SayHelloWorld_FFI();
-            var result = Convert(result_ffi);
-            Free(result_ffi);
-            return result;
-        } 
-    } 
-} 
-ar.ptr, input.utf16_char.size * sizeof(char16));
-        } 
-
-        private static string Convert(string_FFI data_FFI)
-        { 
-            unsafe
-            { 
-                return new string((char*)data_FFI.utf16_char.ptr);
-            } 
-        } 
-
-        private static string_FFI Convert(string data)
-        { 
-            return new string_FFI
-            { 
-                utf16_char = Convert(data.AsSpan())
-            };
-        } 
-
-        private unsafe static string[] Convert(Arr<string_FFI> arr)
-        { 
-            var array_ffi = CopyArray<string_FFI>(arr.ptr, arr.size);
-            var array = new string[arr.size];
-            for (int i = 0; i < arr.size; ++i) array[i] = Convert(array_ffi[i]);
-            return array;
+            int length = array.Length * sizeof(string_FFI);
+            IntPtr ptr = Alloc(length);
+            string_FFI* u_dst = (string_FFI*)ptr.ToPointer();
+            for (int i = 0; i < length; ++i) u_dst[i] = Convert(array[i]);
+            return new Arr<string_FFI>(ptr, length);
         } 
 
         [SuppressUnmanagedCodeSecurity]
-        [DllImport(LIBRARY_NAME, EntryPoint = "GetIntegers")]
-        private extern static Integers_FFI GetIntegers_FFI();
+        [DllImport(LIBRARY_NAME, EntryPoint = "Passthrough")]
+        private extern static StructA Passthrough_FFI(StructA structIn);
 
-        public static Integers GetIntegers()
+        public static StructA Passthrough(StructA structIn)
         { 
-            var result_ffi = GetIntegers_FFI();
+            var structIn_ffi = Convert(structIn);
+            var result_ffi = Passthrough_FFI(structIn_ffi);
             var result = Convert(result_ffi);
-            Free(result_ffi);
             return result;
         } 
     } 

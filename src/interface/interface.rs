@@ -39,6 +39,7 @@ impl Interface {
             self.types.push(Type { name: "uint32".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "int64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "uint64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
+            self.types.push(Type { name: "float16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "float32".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "float64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "char16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
@@ -85,10 +86,16 @@ impl Interface {
                         if !parameter_names.insert(parameter.name.clone()) {
                             panic!("A parameter with name '{}' already exists for method '{}'.", &parameter.name, &method.name);
                         }
+                        if parameter.array.unwrap_or(false) {
+                            panic!("Parameter '{}' for method {}(...) is an array, which is not supported at the moment. Please change the field type to a type with an array field instead.", &parameter.name, method.name);
+                        }
                     }
                     for r#return in &method.returns {
                         if !types_map.contains_key(&r#return.r#type) {
                             panic!("Type '{}' for {}(..) -> {} is undefined.", &r#return.r#type, method.name, &r#return.name);
+                        }
+                        if r#return.array.unwrap_or(false) {
+                            panic!("Return '{}' for method {}(...) is an array, which is not supported at the moment. Please change the field type to a type with an array field instead.", &r#return.name, method.name);
                         }
                     }
 

@@ -39,6 +39,31 @@ pub extern "C" fn Free_FFI(ptr: *mut libc::c_void, length :int32)
     } 
 } 
 
+struct StructA
+{ 
+    valueA: int8,
+    valueB: int16,
+    valueC: int32,
+    valueD: int64,
+    structB: StructB,
+} 
+
+struct StructB
+{ 
+    valueA: float16,
+    valueB: float32,
+    valueC: float64,
+    structC: StructC,
+} 
+
+struct StructC
+{ 
+    valueA: uint8,
+    valueB: uint16,
+    valueC: uint32,
+    valueD: uint64,
+} 
+
 struct string
 { 
     utf16_char_ptr: *const char16,
@@ -46,13 +71,6 @@ struct string
 } 
 
 #[no_mangle]
-pub extern "C" fn SayHelloWorld() -> string
-{ 
-} 
-_len: int32,
-} 
-
-#[no_mangle]
-pub extern "C" fn GetIntegers() -> Integers
+pub extern "C" fn Passthrough(structIn: StructA) -> StructA
 { 
 } 
