@@ -44,7 +44,7 @@ impl Interface {
             self.types.push(Type { name: "float64".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "char16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
 
-            self.types.push(Type { name: "string".to_string(), description: None, fields: vec![ Parameter { name: String::from("utf16_char"), r#type: String::from("char16"), description: None, array: Some(true) } ], base_type: false, is_system: true });
+            self.types.push(Type { name: "string".to_string(), description: None, fields: vec![ Parameter { name: String::from("utf8bytes"), r#type: String::from("uint8"), description: None, array: Some(true) } ], base_type: false, is_system: true });
 
             // Add custom types
             for r#type in &self.types {

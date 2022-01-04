@@ -39,7 +39,7 @@ pub extern "C" fn Free_FFI(ptr: *mut libc::c_void, length :int32)
     } 
 } 
 
-struct StructA
+pub struct StructA
 { 
     valueA: int8,
     valueB: int16,
@@ -48,7 +48,7 @@ struct StructA
     structB: StructB,
 } 
 
-struct StructB
+pub struct StructB
 { 
     valueA: float16,
     valueB: float32,
@@ -56,7 +56,7 @@ struct StructB
     structC: StructC,
 } 
 
-struct StructC
+pub struct StructC
 { 
     valueA: uint8,
     valueB: uint16,
@@ -64,10 +64,10 @@ struct StructC
     valueD: uint64,
 } 
 
-struct string
+pub struct string
 { 
-    utf16_char_ptr: *const char16,
-    utf16_char_len: int32,
+    utf8bytes_ptr: *const uint8,
+    utf8bytes_len: int32,
 } 
 
 #[no_mangle]

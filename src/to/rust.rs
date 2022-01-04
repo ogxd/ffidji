@@ -105,7 +105,7 @@ impl Writer for RustWriter {
 
             // FFI type and conversions (if not blittable)
             write!();
-            write!("struct {}", r#type.name);
+            write!("pub struct {}", r#type.name);
             write!("{");
             for field in &r#type.fields {
                 if field.array.unwrap_or(false) {

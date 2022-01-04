@@ -4,6 +4,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Security;
+using System.Text;
 
 using char16 = System.Char;
 using int8 = System.SByte;
@@ -57,23 +58,6 @@ namespace FFIDJI
             return obj;
         } 
 
-        private unsafe static Arr<T> Convert<T>(T[] array) where T : unmanaged
-        { 
-            return Convert(new ReadOnlySpan<T>(array));
-        } 
-
-        private unsafe static Arr<T> Convert<T>(ReadOnlySpan<T> array) where T : unmanaged
-        { 
-            int length = array.Length * sizeof(T);
-            IntPtr ptr = Alloc(length);
-            void* u_dst = ptr.ToPointer();
-            fixed (T* u_src = &array[0])
-            { 
-                Unsafe.CopyBlock(u_dst, u_src, (uint)length);
-            } 
-            return new Arr<T>(ptr, array.Length);
-        } 
-
         [SuppressUnmanagedCodeSecurity]
         [DllImport(LIBRARY_NAME, EntryPoint = "Alloc_FFI")]
         private static extern IntPtr Alloc(int length);
@@ -118,28 +102,38 @@ namespace FFIDJI
         [StructLayout(LayoutKind.Sequential)]
         private struct string_FFI
         { 
-            public Arr<char16> utf16_char;
+            public Arr<uint8> utf8bytes;
         } 
 
         private static unsafe void Free(string_FFI input)
         { 
-            Free(input.utf16_char.ptr, input.utf16_char.size * sizeof(char16));
+            Free(input.utf8bytes.ptr, input.utf8bytes.size * sizeof(uint8));
         } 
 
         private static string Convert(string_FFI data_FFI)
         { 
             unsafe
             { 
-                return new string((char*)data_FFI.utf16_char.ptr);
+                byte* pStringUtf8 = (byte*)data_FFI.utf8bytes.ptr;
+                var len = 0;
+                while (pStringUtf8[len] != 0) len++; // Todo: not needed since we have size
+                return Encoding.UTF8.GetString(pStringUtf8, len);
             } 
         } 
 
         private static string_FFI Convert(string data)
         { 
-            return new string_FFI
+            unsafe
             { 
-                utf16_char = Convert(data.AsSpan())
-            };
+                fixed (char* pInput = data)
+                { 
+                    var len = Encoding.UTF8.GetByteCount(pInput, data.Length);
+                    var pResult = (byte*)Alloc(len + 1).ToPointer();
+                    var bytesWritten = Encoding.UTF8.GetBytes(pInput, data.Length, pResult, len);
+                    pResult[len] = 0; // null terminated
+                    return new string_FFI { utf8bytes = new Arr<byte>((IntPtr)pResult, len + 1) };
+                } 
+            } 
         } 
 
         private unsafe static string[] Convert(Arr<string_FFI> arr)

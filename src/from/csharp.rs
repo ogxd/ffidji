@@ -78,6 +78,7 @@ impl Writer for CsharpWriter {
         write!("using System.Runtime.InteropServices;");
         write!("using System.Runtime.CompilerServices;");
         write!("using System.Security;");
+        write!("using System.Text;");
 
         write!();
         write!("using char16 = System.Char;");
@@ -137,25 +138,6 @@ impl Writer for CsharpWriter {
         write!("private static T Convert<T>(T obj) where T : unmanaged");
         write!("{");
         write!("return obj;");
-        write!("}");
-
-        write!();
-        write!("private unsafe static Arr<T> Convert<T>(T[] array) where T : unmanaged");
-        write!("{");
-        write!("return Convert(new ReadOnlySpan<T>(array));");
-        write!("}");
-
-        write!();
-        write!("private unsafe static Arr<T> Convert<T>(ReadOnlySpan<T> array) where T : unmanaged");
-        write!("{");
-        write!("int length = array.Length * sizeof(T);");
-        write!("IntPtr ptr = Alloc(length);");
-        write!("void* u_dst = ptr.ToPointer();");
-        write!("fixed (T* u_src = &array[0])");
-        write!("{");
-        write!("Unsafe.CopyBlock(u_dst, u_src, (uint)length);");
-        write!("}");
-        write!("return new Arr<T>(ptr, array.Length);");
         write!("}");
 
         write!();
@@ -232,7 +214,11 @@ impl Writer for CsharpWriter {
                 if is_string {
                     write!("unsafe");
                     write!("{");
-                    write!("return new string((char*)data_FFI.utf16_char.ptr);");
+                    write!("byte* pStringUtf8 = (byte*)data_FFI.utf8bytes.ptr;");
+                    write!("var len = 0;");
+                    write!("while (pStringUtf8[len] != 0) len++; // Todo: not needed since we have size");
+                    write!("return Encoding.UTF8.GetString(pStringUtf8, len);");
+                    //write!("return Encoding.UTF8.GetString(pStringUtf8, data_FFI.utf8bytes.size - 1);");
                     write!("}");
                 } else {
                     write!("return new {}", r#type.name);
@@ -252,17 +238,27 @@ impl Writer for CsharpWriter {
                 write!();
                 write!("private static {}_FFI Convert({} data)", r#type.name, r#type.name);
                 write!("{");
-                write!("return new {}_FFI", r#type.name);
-                write!("{");
                 if is_string {
-                    write!("utf16_char = Convert(data.AsSpan())");
+                    write!("unsafe");
+                    write!("{");
+                    write!("fixed (char* pInput = data)");
+                    write!("{");
+                    write!("var len = Encoding.UTF8.GetByteCount(pInput, data.Length);");
+                    write!("var pResult = (byte*)Alloc(len + 1).ToPointer();");
+                    write!("var bytesWritten = Encoding.UTF8.GetBytes(pInput, data.Length, pResult, len);");
+                    write!("pResult[len] = 0; // null terminated");
+                    write!("return new string_FFI { utf8bytes = new Arr<byte>((IntPtr)pResult, len + 1) };");
+                    write!("}");
+                    write!("}");
                 } else {
+                    write!("return new {}_FFI", r#type.name);
+                    write!("{");
                     for field in &r#type.fields {
                         write!("{} = Convert(data.{}),", field.name, field.name);
                     }
+                    indentation = indentation - 1;
+                    write!("};");
                 }
-                indentation = indentation - 1;
-                write!("};");
                 write!("}");
 
                 write!();
