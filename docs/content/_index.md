@@ -1,7 +1,6 @@
 +++
 title = "🐶 FFIDJI"
 
-
 # The homepage contents
 [extra]
 lead = '<b>FFIDJI</b> connects programming languages together.</br>Interoperability made easy.'
@@ -12,27 +11,19 @@ repo_license = "Open-source MIT License."
 repo_url = "https://github.com/ogxd/ffidji"
 
 [[extra.list]]
-title = "Automatic"
-content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+title = "Easy"
+content = "Define the contract between the two languages, and FFIDJI will generate the bindings for each language automatically."
 
 [[extra.list]]
-title = "The fastest way ⚡️"
-content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+title = "Fast ⚡"
+content = "Unlike non FFI alternatives, there is no serialization/deserialization involved. It can hardly be faster than just sharing memory."
 
 [[extra.list]]
-title = "Highly compatible"
-content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+title = "Adaptative"
+content = "Define primitives, strings, arrays, structures, nested structures..."
 
 [[extra.list]]
-title = "Use complex structures"
-content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-
-[[extra.list]]
-title = "Todo"
-content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-
-[[extra.list]]
-title = "Todo"
-content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+title = "CI/CD Compliant"
+content = "Make room for a FFIDJI step in your CI/CD or make workflow to always have up to date contract implementations."
 
 +++

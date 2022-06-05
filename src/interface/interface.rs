@@ -31,6 +31,7 @@ impl Interface {
             let mut new_types_map: HashMap<String, Type> = HashMap::new();
 
             // Add base types
+            self.types.push(Type { name: "bool".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "int8".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
             self.types.push(Type { name: "uint8".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true});
             self.types.push(Type { name: "int16".to_string(), description: None, fields: Vec::new(), base_type: true, is_system: true });
