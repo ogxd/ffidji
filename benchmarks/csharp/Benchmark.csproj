@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <OutputType>Exe</OutputType>
+    <StartupObject>Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <PackageReference Include="Google.Protobuf" Version="3.19.2" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.41.0" />
+    <PackageReference Include="Grpc.Core" Version="2.43.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.43.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <!--Current directory is bin/Debug-->
+    <PreBuildEvent>
+      <!--Build FFIDJI-->
+      cargo build --manifest-path="..\..\..\..\Cargo.toml" --target-dir="..\..\bin"
+      <!--Generate interfaces-->
+      ffidji -f csharp ..\..\Interface.cs -t rust ..\..\..\rust\src\interface\interface.rs -i ..\..\..\benchmark_interface.xml
+      <!--Generate rust assembly to interop with-->
+      cargo build --manifest-path="..\..\..\rust\Cargo.toml" --target-dir="..\..\bin"
+    </PreBuildEvent>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <!--Current directory is bin/Release-->
+    <PreBuildEvent>
+      <!--Build FFIDJI-->
+      cargo build --release --manifest-path="..\..\..\..\Cargo.toml" --target-dir="..\..\bin"
+      <!--Generate interfaces-->
+      ffidji -f csharp ..\..\Interface.cs -t rust ..\..\..\rust\src\interface\interface.rs -i ..\..\..\benchmark_interface.xml
+      <!--Generate rust assembly to interop with-->
+      cargo build --release --manifest-path="..\..\..\rust\Cargo.toml" --target-dir="..\..\bin"
+    </PreBuildEvent>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!--Hint for compiler to build generated interface-->
+    <Compile Include="$(ProjectDir)Interface.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--Copy native dll along with everything else, so that it works with BenchmarkDotNet-->
+    <None Include="$(OutDir)\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(RecursiveDir)\%(Filename)%(Extension)</Link>
+      <Visible>False</Visible>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\*.proto" ProtoRoot="Protos\" GrpcServices="All" />
+  </ItemGroup>
+
+</Project>

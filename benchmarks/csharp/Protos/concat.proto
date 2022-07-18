@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "Benchmarks";
+
+package concat;
+
+service ConcatService {
+	rpc Submit (ConcatQuery) returns (ConcatResult);
+}
+
+message ConcatQuery {
+  string a = 1;
+  string b = 2;
+}
+
+message ConcatResult {
+  string ab = 1;
+}
