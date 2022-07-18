@@ -1,10 +1,16 @@
-<Interface name="InterfaceStrings">
+<Interface name="InterfaceStrings" assembly="test_interface">
 
     <Type name="strings">
         <Field name="array" type="string" array="true"/>
     </Type>
 
     <Method name="Concat">
+        <Parameter name="a" type="string"/>
+        <Parameter name="b" type="string"/>
+        <Return name="concatenated" type="string"/>
+    </Method>
+
+    <Method name="ConcatOptimized">
         <Parameter name="a" type="string"/>
         <Parameter name="b" type="string"/>
         <Return name="concatenated" type="string"/>

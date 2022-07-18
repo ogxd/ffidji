@@ -7,4 +7,39 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="JunitXml.TestLogger" Version="3.0.114" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <!--Current directory is bin/Debug-->
+    <PreBuildEvent>
+      <!--Build FFIDJI-->
+      cargo build --manifest-path="..\..\..\..\Cargo.toml" --target-dir="..\..\bin"
+      <!--Generate interfaces-->
+      ffidji -f csharp ..\..\Interface.cs -t rust ..\..\..\rust\src\interface\interface.rs -i ..\..\..\interface_strings.xml
+      <!--Generate rust assembly to interop with-->
+      cargo build --manifest-path="..\..\..\rust\Cargo.toml" --target-dir="..\..\bin"
+    </PreBuildEvent>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <!--Current directory is bin/Release-->
+    <PreBuildEvent>
+      <!--Build FFIDJI-->
+      cargo build --release --manifest-path="..\..\..\..\Cargo.toml" --target-dir="..\..\bin"
+      <!--Generate interfaces-->
+      ffidji -f csharp ..\..\Interface.cs -t rust ..\..\..\rust\src\interface\interface.rs -i ..\..\..\interface_strings.xml
+      <!--Generate rust assembly to interop with-->
+      cargo build --release --manifest-path="..\..\..\rust\Cargo.toml" --target-dir="..\..\bin"
+    </PreBuildEvent>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="$(ProjectDir)Interface.cs" />
+  </ItemGroup>
+
 </Project>

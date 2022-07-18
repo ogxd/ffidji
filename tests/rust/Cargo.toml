@@ -1,0 +1,13 @@
+[package]
+name = "test_interface"
+version = "0.1.0"
+authors = ["Olivier Giniaux <oginiaux@gmail.com>"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/ogxd/ffidji"
+
+[dependencies]
+libc = "0.2"
+
+[lib]
+crate-type = ["cdylib"]

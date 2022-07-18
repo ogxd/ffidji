@@ -100,7 +100,7 @@ impl Writer for CsharpWriter {
         write!("public static class {}", match &interface.name { Some(n) => n, None => "MyInterface" });
         write!("{");
 
-        write!("public const string LIBRARY_NAME = \"MyNativeLibrary.dll\";");
+        write!("public const string LIBRARY_NAME = \"{}.dll\";", match &interface.assembly { Some(n) => n, None => "my_interface" });
 
         // Write utilities
         write!();
@@ -247,7 +247,7 @@ impl Writer for CsharpWriter {
                     write!("var pResult = (byte*)Alloc(len + 1).ToPointer();");
                     write!("var bytesWritten = Encoding.UTF8.GetBytes(pInput, data.Length, pResult, len);");
                     write!("pResult[len] = 0; // null terminated");
-                    write!("return new string_FFI { utf8bytes = new Arr<byte>((IntPtr)pResult, len + 1) };");
+                    write!("return new string_FFI { utf8bytes = new Arr<sbyte>((IntPtr)pResult, len + 1) };");
                     write!("}");
                     write!("}");
                 } else {
@@ -273,11 +273,10 @@ impl Writer for CsharpWriter {
                 write!();
                 write!("private unsafe static Arr<{}_FFI> Convert({}[] array)", r#type.name, r#type.name);
                 write!("{");
-                write!("int length = array.Length * sizeof({}_FFI);", r#type.name);
-                write!("IntPtr ptr = Alloc(length);");
+                write!("IntPtr ptr = Alloc(array.Length * sizeof({}_FFI));", r#type.name);
                 write!("{}_FFI* u_dst = ({}_FFI*)ptr.ToPointer();", r#type.name, r#type.name);
-                write!("for (int i = 0; i < length; ++i) u_dst[i] = Convert(array[i]);");
-                write!("return new Arr<{}_FFI>(ptr, length);", r#type.name);
+                write!("for (int i = 0; i < array.Length; ++i) u_dst[i] = Convert(array[i]);");
+                write!("return new Arr<{}_FFI>(ptr, array.Length);", r#type.name);
                 write!("}");
             }
         }
