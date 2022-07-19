@@ -134,15 +134,16 @@ impl Writer for RustWriter {
                 .collect::<Vec<String>>()
                 .join(", ");
 
-            let mut return_type_name = String::from("void");
+            let mut return_type_name = String::new();
             if method.returns.len() != 0 {
+                return_type_name.push_str(" -> ");
                 let return_type = &method.returns[0];
-                return_type_name = param_name!(return_type);
+                return_type_name.push_str(param_name!(return_type).as_str());
             }
 
             write!();
             write!("#[no_mangle]");
-            write!("pub extern \"C\" fn {}({}) -> {}", method.name, parameters_str, return_type_name);
+            write!("pub extern \"C\" fn {}({}){}", method.name, parameters_str, return_type_name);
             write!("{");
             write!("implementation::{}({})", method.name.to_case(Case::Snake), args_str);
             write!("}");

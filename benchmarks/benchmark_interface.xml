@@ -16,4 +16,6 @@
         <Return name="concatenated" type="string"/>
     </Method>
 
+    <Method name="NoArgs" />
+
 </Interface>

@@ -342,8 +342,6 @@ impl Writer for CsharpWriter {
                         write!("Free(result_ffi);");
                     }
                     write!("return result;");
-                } else {
-                    write!("Convert(result_ffi);");
                 }
                 write!("}");
             }

@@ -8,3 +8,5 @@ tests/csharp/interface.cs
 **/target
 Cargo.lock
 tests/rust/src/interface/interface.rs
+benchmarks/rust/src/interface/interface.rs
+benchmarks/csharp/Interface.cs

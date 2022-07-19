@@ -45,3 +45,18 @@ pub fn concat_optimized(a: string, b: string) -> string
         }
     }
 }
+
+pub fn no_args()
+{
+
+}
+
+#[no_mangle]
+pub extern "C" fn ConcatNoFFIDJI(a: *const libc::c_char, b: *const libc::c_char) -> *const libc::c_char {
+    unsafe {
+        let a_s = std::ffi::CStr::from_ptr(a);
+        let b_s = std::ffi::CStr::from_ptr(b);
+        // Being lazy... no really concatenating
+        a_s.as_ptr()
+    }
+}

@@ -16,6 +16,16 @@ _Many more to come!_
 
 ## [Full Documentation](https://ogxd.github.io/ffidji/)
 
+## Benchmark
+
+'''
+|               Method |          Mean |        Error |       StdDev |     Ratio |  RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|--------------------- |--------------:|-------------:|-------------:|----------:|---------:|-------:|-------:|----------:|
+|       Concat Managed |      13.90 ns |     0.361 ns |     0.822 ns |      1.00 |     0.00 | 0.0076 |      - |      48 B |
+|        Concat FFIDJI |     303.69 ns |     6.162 ns |    10.296 ns |     21.87 |     1.44 | 0.0076 |      - |      48 B |
+| Concat Protobuf Grpc | 217,729.81 ns | 4,329.875 ns | 7,807.658 ns | 15,756.08 | 1,126.16 | 1.4648 | 0.4883 |   9,795 B |
+'''
+
 ## Example
 
 ### Interface
@@ -275,3 +285,7 @@ __declspec(dllexport) int32 SumArray(ArrayToSum input);
 }
 #endif
 ```
+
+## Links
+
+See [The Rust FFI Omnibus](http://jakegoulding.com/rust-ffi-omnibus/string_arguments/) for more info on how to marshal to rust

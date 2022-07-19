@@ -1,10 +1,15 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Order;
 using Benchmarks;
 using Grpc.Core;
 using Grpc.Net.Client;
 using System;
+using System.Runtime.InteropServices;
+using System.Security;
 
 [MemoryDiagnoser]
+[Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
+[SimpleJob(launchCount: 2, warmupCount: 4, targetCount: 6)]
 public class Benchmark
 {
     private string _a;
@@ -58,5 +63,23 @@ public class Benchmark
     public string ConcatOptimized()
     {
         return FFIDJI.InterfaceStrings.ConcatOptimized(_a, _b);
+    }
+
+    [SuppressUnmanagedCodeSecurity]
+    [DllImport(FFIDJI.InterfaceStrings.LIBRARY_NAME, EntryPoint = "ConcatNoFFIDJI", CallingConvention = CallingConvention.Cdecl)]
+    private extern static IntPtr ConcatNoFFIDJI_FFI(string a, string b);
+
+    [Benchmark]
+    public string ConcatNoFFIDJI()
+    {
+        var ptr = ConcatNoFFIDJI_FFI(_a, _b);
+        return Marshal.PtrToStringAuto(ptr);
+    }
+
+    [Benchmark]
+    public void NoArgs()
+    {
+        // No computations, no args, no returns. Just to see the cost of calling native code from csharp
+        FFIDJI.InterfaceStrings.NoArgs();
     }
 }
